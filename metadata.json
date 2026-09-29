@@ -1,0 +1,6 @@
+{
+  "name": "DYNIMETIZE ZX",
+  "description": "DYNIMETIZE ZX - Advanced Android Gaming & Telemetry Dashboard by ZUCCHERO XANN featuring Shizuku bridge, Game Space Library, System Telemetry, and Plugin Extensions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

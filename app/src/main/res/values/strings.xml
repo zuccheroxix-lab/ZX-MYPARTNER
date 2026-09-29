@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">DYNIMETIZE ZX</string>
+    <string name="dev_name">ZUCCHERO XANN</string>
+    <string name="dev_role">DEVELOPER</string>
+    <string name="dev_id">ZX-DEV-001</string>
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_subtitle">Dashboard Menu ZX</string>
+    <string name="game_library_title">Game Library</string>
+    <string name="game_library_subtitle">Game Library Menu ZX</string>
+    <string name="settings_title">Settings ZX</string>
+    <string name="settings_subtitle">Settings Menu ZX</string>
+    <string name="plugin_title">Plugin Extension</string>
+    <string name="plugin_subtitle">Plugin Extension Menu ZX</string>
+    <string name="version_app">VERSION APP</string>
+    <string name="developer_app">DEVELOPER APP</string>
+    <string name="information_system">INFORMATION SYSTEM</string>
+    <string name="support_me">Support</string>
+    <string name="support_subtitle">Support ZUCCHERO XANN on Sociabuzz untuk kelanjutan update DYNIMETIZE ZX</string>
+    <string name="community">Official Contact</string>
+    <string name="community_subtitle">Hubungi WhatsApp dan ikuti WhatsApp Channel resmi kami</string>
+    <string name="community_public">Partner Community</string>
+    <string name="community_public_subtitle">Partner resmi DYNIMETIZE ZX: LALZ &amp; VAXXY</string>
+</resources>
