@@ -42,6 +42,10 @@ fun MainScreen(
         deviceInfo = DeviceInfoProvider.getDeviceInfo(context)
     }
 
+    androidx.activity.compose.BackHandler(enabled = currentScreen != NavScreen.HOME) {
+        currentScreen = NavScreen.HOME
+    }
+
     LaunchedEffect(Unit) {
         refreshDeviceInfo()
     }

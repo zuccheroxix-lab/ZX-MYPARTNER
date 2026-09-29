@@ -1,21 +1,38 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ProGuard & R8 Optimization Rules for DYNIMETIZE ZX
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Preserve Line Numbers for Crash Reporting
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Kotlin Coroutines
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.coroutines.** {
+    volatile <fields>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Jetpack Compose Rules
+-keepclassmembers class * extends androidx.compose.ui.Modifier { *; }
+-dontwarn androidx.compose.**
+
+# Room Database Rules
+-keep class * extends androidx.room.RoomDatabase
+-dontwarn androidx.room.paging.**
+
+# Moshi & Retrofit Networking
+-keepclassmembers class * {
+    @com.squareup.moshi.* <methods>;
+    @com.squareup.moshi.* <fields>;
+}
+-keep class com.squareup.moshi.** { *; }
+-dontwarn com.squareup.moshi.**
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+
+# Data Models & Config
+-keep class com.example.data.** { *; }
+-keepclassmembers class com.example.data.** { *; }
+
+# Shizuku Privileged API Bridge
+-dontwarn moe.shizuku.**
+-keep class moe.shizuku.** { *; }

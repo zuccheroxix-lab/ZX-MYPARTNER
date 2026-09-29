@@ -83,7 +83,7 @@ fun BottomNavBar(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                NavScreen.values().forEach { screen ->
+                NavScreen.entries.forEach { screen ->
                     val isSelected = currentScreen == screen
                     val interactionSource = remember { MutableInteractionSource() }
 

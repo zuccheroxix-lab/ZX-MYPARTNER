@@ -85,8 +85,8 @@ fun SettingsScreen(
     ) {
         // Top Header matching video: Settings INOX | Settings Menu ZENIX | Dev : ZyrulFIVE
         DashboardHeader(
-            title = "Settings INOX",
-            subtitle = "Settings Menu ZENIX",
+            title = "Settings ZX",
+            subtitle = "Settings Menu ZX",
             developerName = Config.DEVELOPER_NAME
         )
 
@@ -116,8 +116,8 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Section 2: Game Space & INOX Booster Engine
-        SettingsSectionTitle(title = "GAME SPACE & INOX ENGINE")
+        // Section 2: Game Space & ZX Booster Engine
+        SettingsSectionTitle(title = "GAME SPACE & ZX ENGINE")
 
         Box(
             modifier = Modifier
@@ -190,7 +190,13 @@ fun SettingsScreen(
                         settingsManager.setHapticsEnabled(enabled)
                         if (enabled) {
                             try {
-                                val vib = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                                val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? android.os.VibratorManager
+                                    vm?.defaultVibrator
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                                }
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     vib?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
                                 } else {
@@ -206,8 +212,8 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Section 4: INOX System Info
-        SettingsSectionTitle(title = "INOX BUILD & ABOUT")
+        // Section 4: DYNIMETIZE ZX System Info
+        SettingsSectionTitle(title = "DYNIMETIZE ZX BUILD & ABOUT")
 
         Box(
             modifier = Modifier
@@ -235,7 +241,7 @@ fun SettingsScreen(
                     icon = Icons.Default.Info,
                     title = "Developer & Core",
                     subtitle = Config.DEVELOPER_FULL,
-                    badge = "ZyrulFIVE",
+                    badge = Config.DEVELOPER_ROLE,
                     badgeColor = Color.White,
                     onClick = {
                         Toast.makeText(context, "Lead Developer: ${Config.DEVELOPER_NAME}", Toast.LENGTH_SHORT).show()
@@ -259,7 +265,7 @@ fun SettingsScreen(
             },
             text = {
                 Text(
-                    text = "Shizuku memungkinkan ZEVIX 2.0 mengeksekusi perintah shell tingkat lanjut (seperti penguncian refresh rate dan prioritas proses) tanpa memerlukan root.",
+                    text = "Shizuku memungkinkan DYNIMETIZE ZX mengeksekusi perintah shell tingkat lanjut (seperti penguncian refresh rate dan prioritas proses) tanpa memerlukan root.",
                     color = Color(0xFFCCCCCC),
                     fontSize = 13.sp
                 )

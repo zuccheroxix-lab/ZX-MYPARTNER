@@ -114,7 +114,7 @@ fun GameLibraryScreen(
         // Top Header matching video: Game Library | Game Library Menu ZENIX | Dev : ZyrulFIVE
         DashboardHeader(
             title = "Game Library",
-            subtitle = "Game Library Menu ZENIX",
+            subtitle = "Game Library Menu ZX",
             developerName = Config.DEVELOPER_NAME
         )
 
@@ -181,7 +181,13 @@ fun GameLibraryScreen(
                                 .clickable {
                                     // Trigger real haptic feedback
                                     try {
-                                        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                                        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? android.os.VibratorManager
+                                            vm?.defaultVibrator
+                                        } else {
+                                            @Suppress("DEPRECATION")
+                                            context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                                        }
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                             vibrator?.vibrate(
                                                 VibrationEffect.createOneShot(80, VibrationEffect.DEFAULT_AMPLITUDE)

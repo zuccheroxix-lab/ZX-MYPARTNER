@@ -94,7 +94,7 @@ fun PluginExtensionScreen(
             ),
             ZenixPlugin(
                 id = "touch_boost",
-                name = "ZENIX Touch Driver Overclock",
+                name = "DYNIMETIZE Touch Driver Overclock",
                 version = "v2.4.1",
                 description = "Mengurangi input latency sentuhan jari pada layar hingga 240Hz dengan mem-bypass touch queue filter.",
                 icon = Icons.Default.TouchApp,
@@ -136,7 +136,7 @@ fun PluginExtensionScreen(
         // Top Header matching video: Plugin Extension | plugin Extension Menu ZENIX | Dev : ZyrulFIVE
         DashboardHeader(
             title = "Plugin Extension",
-            subtitle = "plugin Extension Menu ZENIX",
+            subtitle = "Plugin Extension Menu ZX",
             developerName = Config.DEVELOPER_NAME
         )
 
@@ -163,7 +163,7 @@ fun PluginExtensionScreen(
                     )
 
                     Text(
-                        text = "ZENIX Core 2.0",
+                        text = "DYNIMETIZE ZX Core 2.0",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color(0xFF6E6E78),
                             fontFamily = FontFamily.Monospace,
@@ -183,7 +183,13 @@ fun PluginExtensionScreen(
                         }
                         // Haptic feedback
                         try {
-                            val vib = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                            val vib = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? android.os.VibratorManager
+                                vm?.defaultVibrator
+                            } else {
+                                @Suppress("DEPRECATION")
+                                context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                            }
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                 vib?.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
                             } else {
@@ -227,7 +233,7 @@ fun PluginExtensionScreen(
                         .clickable {
                             Toast.makeText(
                                 context,
-                                "Semua modul resmi ZEVIX 2.0 sudah terpasang dan siap digunakan!",
+                                "Semua modul resmi DYNIMETIZE ZX sudah terpasang dan siap digunakan!",
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
