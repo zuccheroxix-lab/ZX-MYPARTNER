@@ -20,6 +20,34 @@
 
 ---
 
+## 📦 Lokasi File APK (Build Artifacts)
+
+Hasil build aktual yang valid, telah diverifikasi, dan siap digunakan atau dipublish:
+
+| Tipe APK | Lokasi File | Status | Ukuran File (Bytes) | Ukuran (MB) | Signature Scheme |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Debug APK** | `releases/app-debug.apk` | **Valid / Debug Signed** | 29,640,412 bytes | ~28.26 MB | APK Signature Scheme v2 |
+| **Release APK** | `releases/app-release.apk` | **Valid / Release Signed** | 22,246,877 bytes | ~21.22 MB | APK Signature Scheme v2 |
+
+### 🔍 Detail Konfigurasi & Metadata APK Aktual
+
+- **Application ID / Package Name:** `com.aistudio.zxdashboard.zxapp`
+- **Version Name:** `2.0.0` (`Version 2.0.0 (shizuku)`)
+- **Version Code:** `200`
+- **Compile SDK:** `36` (Android 16 platform build)
+- **Target SDK:** `36`
+- **Minimum SDK:** `24` (Android 7.0 Nougat)
+- **Application Label:** `DYNIMETIZE ZX`
+- **Arsitektur APK:** Universal (mendukung semua ABI: arm64-v8a, armeabi-v7a, x86_64, x86)
+- **Signing Status:**
+  - `releases/app-debug.apk`: Signed dengan Android Debug Keystore (`androiddebugkey`), Scheme v2 verified.
+  - `releases/app-release.apk`: Signed dengan valid release signing configuration (debug fallback key / custom key), Scheme v2 verified.
+- **SHA-256 Checksums:**
+  - `releases/app-debug.apk`: `19c6babaf5ec29fb859010c95ca55cc0709afc866a9e385c3518c842e50d70cf`
+  - `releases/app-release.apk`: `28d513a716ed494f361e5206efa6854e1c19ed52bb9e0d14c104e8f1c1fe60d9`
+
+---
+
 ## 🚀 Key Features
 
 1. **Floating Gaming HUD Overlay (In-Game HUD):**
@@ -99,9 +127,10 @@
 ├── .github/
 │   └── workflows/
 │       └── release.yml          # GitHub Actions CI/CD for automated builds & releases
-├── release/
+├── releases/
 │   ├── app-debug.apk            # Verified Debug APK artifact
 │   └── app-release.apk          # Verified Production Release APK artifact
+├── release/                     # Compatibility mirror
 ├── build_apks.sh                # Automated build & verification shell script
 ├── gradle/
 │   └── libs.versions.toml       # Gradle Version Catalog
@@ -142,7 +171,7 @@ You can build and verify both APKs in a single step using the included script:
 chmod +x build_apks.sh
 ./build_apks.sh
 ```
-This builds both variants, validates the APK files, and outputs them to `/release/`.
+This builds both variants, validates the APK files, and outputs them to `/releases/`.
 
 ### 2. Manual Gradle Build
 
@@ -151,7 +180,7 @@ This builds both variants, validates the APK files, and outputs them to `/releas
 gradle assembleDebug
 ```
 Output artifact: `app/build/outputs/apk/debug/app-debug.apk`  
-Copied to: `release/app-debug.apk`
+Copied to: `releases/app-debug.apk`
 
 #### Build Release APK:
 To sign with your custom developer keystore:
@@ -166,7 +195,7 @@ gradle assembleRelease
 *Note: If no custom keystore is configured, Gradle will automatically sign with the local debug keystore so the release APK remains fully installable and testable.*
 
 Output artifact: `app/build/outputs/apk/release/app-release.apk`  
-Copied to: `release/app-release.apk`
+Copied to: `releases/app-release.apk`
 
 ---
 
@@ -176,10 +205,10 @@ Copied to: `release/app-release.apk`
 Connect your phone with USB Debugging enabled and run:
 ```bash
 # Install Release APK
-adb install -r release/app-release.apk
+adb install -r releases/app-release.apk
 
 # Or install Debug APK
-adb install -r release/app-debug.apk
+adb install -r releases/app-debug.apk
 ```
 
 ### Method 2: Direct Install on Android Device

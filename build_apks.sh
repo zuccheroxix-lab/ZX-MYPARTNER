@@ -38,17 +38,20 @@ if [ ! -f "$RELEASE_APK" ]; then
     exit 1
 fi
 
-# Prepare output release directory
+# Prepare output release directories
+mkdir -p releases
 mkdir -p release
+cp "$DEBUG_APK" releases/app-debug.apk
+cp "$RELEASE_APK" releases/app-release.apk
 cp "$DEBUG_APK" release/app-debug.apk
 cp "$RELEASE_APK" release/app-release.apk
 
 echo "[4/4] Validation Summary:"
 echo "----------------------------------------------------------"
-DEBUG_SIZE=$(stat -c%s "release/app-debug.apk" 2>/dev/null || stat -f%z "release/app-debug.apk" 2>/dev/null || wc -c < "release/app-debug.apk")
-RELEASE_SIZE=$(stat -c%s "release/app-release.apk" 2>/dev/null || stat -f%z "release/app-release.apk" 2>/dev/null || wc -c < "release/app-release.apk")
+DEBUG_SIZE=$(stat -c%s "releases/app-debug.apk" 2>/dev/null || stat -f%z "releases/app-debug.apk" 2>/dev/null || wc -c < "releases/app-debug.apk")
+RELEASE_SIZE=$(stat -c%s "releases/app-release.apk" 2>/dev/null || stat -f%z "releases/app-release.apk" 2>/dev/null || wc -c < "releases/app-release.apk")
 
-echo "✔ DEBUG APK   : release/app-debug.apk   ($DEBUG_SIZE bytes)"
-echo "✔ RELEASE APK : release/app-release.apk ($RELEASE_SIZE bytes)"
+echo "✔ DEBUG APK   : releases/app-debug.apk   ($DEBUG_SIZE bytes)"
+echo "✔ RELEASE APK : releases/app-release.apk ($RELEASE_SIZE bytes)"
 echo "----------------------------------------------------------"
 echo "BUILD SUCCESSFUL! Both APKs are verified and GitHub ready."

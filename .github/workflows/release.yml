@@ -39,7 +39,9 @@ jobs:
 
       - name: Prepare Release Artifacts
         run: |
-          mkdir -p release
+          mkdir -p releases release
+          cp app/build/outputs/apk/debug/app-debug.apk releases/app-debug.apk
+          cp app/build/outputs/apk/release/app-release.apk releases/app-release.apk
           cp app/build/outputs/apk/debug/app-debug.apk release/app-debug.apk
           cp app/build/outputs/apk/release/app-release.apk release/app-release.apk
 
@@ -47,21 +49,21 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: release/app-debug.apk
+          path: releases/app-debug.apk
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: release/app-release.apk
+          path: releases/app-release.apk
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/app-debug.apk
-            release/app-release.apk
+            releases/app-debug.apk
+            releases/app-release.apk
           name: DYNIMETIZE ZX ${{ github.ref_name }}
           body_path: CHANGELOG.md
           draft: false
