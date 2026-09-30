@@ -56,6 +56,9 @@ fun HomeScreen(
         // 2. BANNER
         BannerCard()
 
+        // 2.5 FLOATING GAMING HUD OVERLAY LAUNCHER
+        com.example.ui.components.GamingHudLauncherCard()
+
         // 3. VERSION CARDS (Version APP & Developer APP)
         VersionCards(
             appVersion = deviceInfo.appVersion,

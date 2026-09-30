@@ -216,6 +216,13 @@ fun GameLibraryScreen(
                 }
             }
 
+            // Floating Gaming HUD Overlay Card for in-game telemetry
+            item {
+                com.example.ui.components.GamingHudLauncherCard(
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+
             // Section Label: "Game-Libray" (Matching exact label in video!)
             item {
                 Text(

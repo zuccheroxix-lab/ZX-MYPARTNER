@@ -1,6 +1,6 @@
 # DYNIMETIZE ZX
 
-**DYNIMETIZE ZX** is a modern, high-performance Android Gaming & Telemetry Dashboard engineered for mobile gamers, power users, and system enthusiasts. Built with Jetpack Compose and Material 3, it integrates system telemetry, deep hardware diagnostics, Game Space optimization profiles, plugin management, and Shizuku ADB-level service integration.
+**DYNIMETIZE ZX** is a modern, high-performance Android Gaming & Telemetry Dashboard engineered for mobile gamers, power users, and system enthusiasts. Built with Jetpack Compose and Material 3, it integrates real-time system telemetry, in-game floating Gaming HUD overlay, deep hardware diagnostics, Game Space optimization profiles, plugin management, and Shizuku ADB-level service integration.
 
 ---
 
@@ -22,27 +22,44 @@
 
 ## 🚀 Key Features
 
-1. **Dashboard & Telemetry:**
-   - Real-time CPU usage, battery temperature, battery health, and memory stats.
-   - Device Hardware identity (SoC model, Board, Architecture, ABI, Android Version & Security Patch).
-   - Fast action tiles (Flashlight, Screen Test, Quick Booster).
+1. **Floating Gaming HUD Overlay (In-Game HUD):**
+   - Premium gaming HUD appearance with futuristic dark/gold transparent design.
+   - Real-time **FPS counter** (measured directly via Android Choreographer).
+   - Real-time **RAM monitor** (calculated via Android ActivityManager).
+   - Real-time **CPU telemetry** (derived from system hardware state).
+   - 8 in-game quick action buttons:
+     - `[1] RAM BOOST` (Deep cache cleanup & RAM trimmer)
+     - `[2] EXTREME GOV` (High-performance CPU/GPU governor mode)
+     - `[3] TOUCH 240Hz` (240Hz ultra-fast touch response lock)
+     - `[4] FPS STABILIZER` (Thermal throttling & frame drop limiter)
+     - `[5] TORCH / FLASHLIGHT` (Device camera LED toggle)
+     - `[6] GAME SPACE` (In-game quick drawer / launcher)
+     - `[7] DND MODE` (Gaming notification & disturbance blocker)
+     - `[8] SHIZUKU` (ADB daemon connection checker)
+   - Real-time hardware **Brightness slider** and **Music Volume slider** (`AudioManager.STREAM_MUSIC`).
+   - Compact, non-intrusive **Floating Trigger bubble** draggable across screen edges without interfering with touch gameplay.
 
-2. **Game Space Library:**
-   - Curated list of popular battle royale and competitive games (e.g., Free Fire, PUBG Mobile, Mobile Legends, Genshin Impact).
+2. **Dashboard & System Telemetry:**
+   - Real-time memory, storage, and battery metrics (temperature, voltage, charging status, health).
+   - Hardware identity (SoC model, Board, Architecture, ABI, Android Version & Security Patch).
+   - Fast action utilities (Flashlight, Screen Test, Quick Booster).
+
+3. **Game Space Library:**
+   - Curated list of popular battle royale and competitive games (e.g., Free Fire MAX, PUBG Mobile, Mobile Legends).
    - Dedicated Booster mode with real tactile haptic feedback.
-   - Custom per-game tuning settings.
+   - Custom per-game tuning settings and Game Space HUD launcher card.
 
-3. **Plugin Extension Manager:**
+4. **Plugin Extension Manager:**
    - DYNIMETIZE Touch Driver Overclock.
    - GPU Vulkan Turbo Pipeline.
    - RAM Compression & ZRAM Tuner.
    - Network Low Latency Routing.
 
-4. **Shizuku Bridge Integration:**
+5. **Shizuku Bridge Integration:**
    - Shizuku service status detection.
    - Permission request flow and ADB pairing instructions.
 
-5. **Official Support & Community:**
+6. **Official Support & Community:**
    - Developer Profile: **ZUCCHERO XANN** (`ZX-DEV-001`).
    - Official WhatsApp & WhatsApp Channel community links.
    - Official Partners: **LALZ** (`ZX-PARTNER-001`) and **VAXXY** (`ZX-PARTNER-002`).
@@ -62,6 +79,11 @@
 │       │   ├── AndroidManifest.xml
 │       │   ├── java/com/example/
 │       │   │   ├── MainActivity.kt
+│       │   │   ├── service/
+│       │   │   │   ├── OverlayService.kt       # Foreground HUD WindowManager service
+│       │   │   │   ├── GamingHudView.kt        # Jetpack Compose Gaming HUD UI & Trigger
+│       │   │   │   ├── HudTelemetry.kt         # Real hardware metrics (FPS, RAM, CPU)
+│       │   │   │   └── OverlayLifecycleOwner.kt # Service lifecycle owner for Compose
 │       │   │   ├── data/
 │       │   │   │   ├── Config.kt               # App metadata, links, partners
 │       │   │   │   ├── DeviceInfoProvider.kt   # System hardware & battery stats
@@ -74,23 +96,32 @@
 │       │   │       └── theme/                  # M3 themes, typography, colors
 │       │   └── res/                            # Drawables, mipmaps, strings
 │       └── test/                               # Local unit & Robolectric tests
+├── .github/
+│   └── workflows/
+│       └── release.yml          # GitHub Actions CI/CD for automated builds & releases
+├── release/
+│   ├── app-debug.apk            # Verified Debug APK artifact
+│   └── app-release.apk          # Verified Production Release APK artifact
+├── build_apks.sh                # Automated build & verification shell script
 ├── gradle/
 │   └── libs.versions.toml       # Gradle Version Catalog
 ├── build.gradle.kts             # Root Gradle build config
 ├── settings.gradle.kts          # Gradle settings
 ├── README.md                    # Project documentation
 ├── CHANGELOG.md                 # Version release notes
-└── LICENSE                      # Open-source license
+└── LICENSE                      # Apache 2.0 Open-source license
 ```
 
 ---
 
 ## 🔒 Permissions Used
 
-The application adheres to the principle of least privilege:
-
 | Permission | Purpose |
 |------------|---------|
+| `android.permission.SYSTEM_ALERT_WINDOW` | Displaying the floating Gaming HUD overlay over other games. |
+| `android.permission.FOREGROUND_SERVICE` | Keeping telemetry and overlay responsive while user plays games. |
+| `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | Required on Android 14+ for specialized floating gaming utilities. |
+| `android.permission.POST_NOTIFICATIONS` | Foreground service notification management. |
 | `android.permission.INTERNET` | Loading official developer & community links (WhatsApp, Sociabuzz). |
 | `android.permission.ACCESS_NETWORK_STATE` | Monitoring active network connectivity status. |
 | `android.permission.VIBRATE` | Tactile haptic feedback on booster activation and settings toggles. |
@@ -105,14 +136,25 @@ The application adheres to the principle of least privilege:
 - Android SDK (API 24 to 36)
 - Gradle 8.5+
 
-### 1. Build Debug APK
+### 1. Automated Build via Script (Recommended)
+You can build and verify both APKs in a single step using the included script:
+```bash
+chmod +x build_apks.sh
+./build_apks.sh
+```
+This builds both variants, validates the APK files, and outputs them to `/release/`.
+
+### 2. Manual Gradle Build
+
+#### Build Debug APK:
 ```bash
 gradle assembleDebug
 ```
-Output artifact: `app/build/outputs/apk/debug/app-debug.apk`
+Output artifact: `app/build/outputs/apk/debug/app-debug.apk`  
+Copied to: `release/app-debug.apk`
 
-### 2. Build Release APK
-To sign with your custom developer keystore, configure the environment variables:
+#### Build Release APK:
+To sign with your custom developer keystore:
 ```bash
 export KEYSTORE_PATH="/path/to/your/upload-keystore.jks"
 export STORE_PASSWORD="your_keystore_password"
@@ -121,14 +163,40 @@ export KEY_PASSWORD="your_key_password"
 
 gradle assembleRelease
 ```
-*Note: If no custom keystore is provided, Gradle will safely sign the release build using the local debug keystore for development/testing convenience.*
+*Note: If no custom keystore is configured, Gradle will automatically sign with the local debug keystore so the release APK remains fully installable and testable.*
 
-Output artifact: `app/build/outputs/apk/release/app-release.apk`
+Output artifact: `app/build/outputs/apk/release/app-release.apk`  
+Copied to: `release/app-release.apk`
 
-### 3. Install APK via ADB
+---
+
+## 📲 How to Install the APK
+
+### Method 1: Via ADB (Android Debug Bridge)
+Connect your phone with USB Debugging enabled and run:
 ```bash
-adb install -r app/build/outputs/apk/release/app-release.apk
+# Install Release APK
+adb install -r release/app-release.apk
+
+# Or install Debug APK
+adb install -r release/app-debug.apk
 ```
+
+### Method 2: Direct Install on Android Device
+1. Transfer `app-release.apk` or `app-debug.apk` to your phone via USB, Telegram, or Google Drive.
+2. Open the file on your device using any File Manager.
+3. If prompted, allow "Install from Unknown Sources".
+4. Follow the on-screen prompts to complete the installation.
+5. On first launch, grant the "Display over other apps" (Overlay) permission to enable the in-game HUD.
+
+---
+
+## 🚀 GitHub Actions CI/CD Release
+The repository includes a ready-to-use GitHub Actions workflow (`.github/workflows/release.yml`).
+Whenever a git tag (e.g., `v2.0.0`) is pushed to GitHub, GitHub Actions will automatically:
+1. Compile both Debug and Release APKs.
+2. Create a new GitHub Release.
+3. Automatically attach `app-debug.apk` and `app-release.apk` as downloadable release assets.
 
 ---
 
@@ -140,14 +208,6 @@ adb install -r app/build/outputs/apk/release/app-release.apk
    adb shell sh /sdcard/Android/data/moe.shizuku.privileged.api/start.sh
    ```
 3. Open **DYNIMETIZE ZX**; the Shizuku banner will detect the running state and allow high-performance operations.
-
----
-
-## 🔧 Basic Troubleshooting
-
-- **Build error about Keystore:** Ensure `KEYSTORE_PATH` points to a valid `.jks` file or unset it to use the default fallback key.
-- **Haptic feedback not working:** Check device Settings > Sound & Vibration > Touch Feedback to ensure vibration is globally enabled.
-- **Sociabuzz or WhatsApp links not opening:** Ensure a web browser or WhatsApp application is installed on the target device.
 
 ---
 

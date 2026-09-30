@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.AlertDialog
@@ -39,6 +40,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -162,6 +164,32 @@ fun SettingsScreen(
                     onCheckedChange = {
                         fpsStabilizer = it
                         Toast.makeText(context, if (it) "FPS Stabilizer: AKTIF" else "FPS Stabilizer: NONAKTIF", Toast.LENGTH_SHORT).show()
+                    }
+                )
+
+                HorizontalDivider(color = Color(0xFF222228), thickness = 0.6.dp)
+
+                val isHudActive by com.example.service.OverlayService.isServiceRunning.collectAsState()
+                SettingsSwitchTile(
+                    icon = androidx.compose.material.icons.Icons.Default.SportsEsports,
+                    title = "Floating Gaming HUD Overlay",
+                    subtitle = "Tampilkan floating HUD game di atas Free Fire, MLBB, PUBG",
+                    checked = isHudActive,
+                    onCheckedChange = { enable ->
+                        if (enable) {
+                            if (!android.provider.Settings.canDrawOverlays(context)) {
+                                Toast.makeText(context, "Izin Overlay diperlukan", Toast.LENGTH_SHORT).show()
+                                val intent = android.content.Intent(
+                                    android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                    android.net.Uri.parse("package:${context.packageName}")
+                                ).apply { flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK }
+                                context.startActivity(intent)
+                            } else {
+                                com.example.service.OverlayService.start(context)
+                            }
+                        } else {
+                            com.example.service.OverlayService.stop(context)
+                        }
                     }
                 )
             }
