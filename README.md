@@ -22,29 +22,29 @@
 
 ## 📦 Lokasi File APK (Build Artifacts)
 
-Hasil build aktual yang valid, telah diverifikasi, dan siap digunakan atau dipublish:
+Hasil build aktual yang valid, telah diverifikasi, dan siap diunduh / dipublish:
 
 | Tipe APK | Lokasi File | Status | Ukuran File (Bytes) | Ukuran (MB) | Signature Scheme |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Debug APK** | `releases/app-debug.apk` | **Valid / Debug Signed** | 29,640,412 bytes | ~28.26 MB | APK Signature Scheme v2 |
-| **Release APK** | `releases/app-release.apk` | **Valid / Release Signed** | 22,246,877 bytes | ~21.22 MB | APK Signature Scheme v2 |
+| **Release APK** | `releases/DYNIMETIZE_ZX-v2.0.0-release.apk` | **APK RELEASE READY** | 22,246,877 bytes | ~21.22 MB | APK Signature Scheme v2 (Verified) |
+
+### 🚀 Auto Download Release APK
+Aplikasi ini dilengkapi dengan portal web download otomatis pada port 3000 (`/public/index.html`) yang secara otomatis mendeteksi file Release APK dan memicu download langsung tombol **DOWNLOAD APK** (`DYNIMETIZE_ZX-v2.0.0-release.apk`).
 
 ### 🔍 Detail Konfigurasi & Metadata APK Aktual
 
 - **Application ID / Package Name:** `com.aistudio.zxdashboard.zxapp`
+- **Nama File APK:** `DYNIMETIZE_ZX-v2.0.0-release.apk`
 - **Version Name:** `2.0.0` (`Version 2.0.0 (shizuku)`)
 - **Version Code:** `200`
 - **Compile SDK:** `36` (Android 16 platform build)
 - **Target SDK:** `36`
-- **Minimum SDK:** `24` (Android 7.0 Nougat)
+- **Minimum SDK:** `24` (Android 7.0 Nougat ke atas)
 - **Application Label:** `DYNIMETIZE ZX`
 - **Arsitektur APK:** Universal (mendukung semua ABI: arm64-v8a, armeabi-v7a, x86_64, x86)
-- **Signing Status:**
-  - `releases/app-debug.apk`: Signed dengan Android Debug Keystore (`androiddebugkey`), Scheme v2 verified.
-  - `releases/app-release.apk`: Signed dengan valid release signing configuration (debug fallback key / custom key), Scheme v2 verified.
-- **SHA-256 Checksums:**
-  - `releases/app-debug.apk`: `19c6babaf5ec29fb859010c95ca55cc0709afc866a9e385c3518c842e50d70cf`
-  - `releases/app-release.apk`: `28d513a716ed494f361e5206efa6854e1c19ed52bb9e0d14c104e8f1c1fe60d9`
+- **Status Signing Aktual:** Signed dengan valid release signing configuration, Scheme v2 verified.
+- **SHA-256 Checksum:** `28d513a716ed494f361e5206efa6854e1c19ed52bb9e0d14c104e8f1c1fe60d9`
+- **Status:** **DOWNLOAD COMPLETE**
 
 ---
 

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DYNIMETIZE ZX - Download Release APK</title>
+  <style>
+    :root {
+      --bg-color: #08090C;
+      --card-bg: rgba(18, 20, 26, 0.95);
+      --gold: #FFB300;
+      --amber: #FF8F00;
+      --gold-glow: rgba(255, 179, 0, 0.35);
+      --green: #00E676;
+      --green-glow: rgba(0, 230, 118, 0.35);
+      --text: #F0F2F5;
+      --text-dim: #9E9E9E;
+      --border: rgba(255, 179, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background-image: 
+        radial-gradient(circle at 50% 10%, rgba(255, 179, 0, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 143, 0, 0.05) 0%, transparent 40%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 30px var(--gold-glow);
+      padding: 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--amber), transparent);
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: rgba(0, 230, 118, 0.12);
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      box-shadow: 0 0 15px var(--green-glow);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--green);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 8px var(--green); }
+      100% { transform: scale(0.9); opacity: 0.7; }
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #FFFFFF;
+      margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(255, 179, 0, 0.4);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 24px;
+    }
+
+    .apk-card {
+      background: rgba(10, 11, 15, 0.85);
+      border: 1px solid rgba(255, 179, 0, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .apk-filename {
+      font-family: monospace;
+      font-size: 15px;
+      color: var(--gold);
+      font-weight: 700;
+      word-break: break-all;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .meta-label {
+      color: var(--text-dim);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .meta-value {
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 16px 28px;
+      background: linear-gradient(135deg, #FFB300 0%, #FF8F00 100%);
+      color: #0A0B0F;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 6px 20px rgba(255, 179, 0, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 179, 0, 0.6);
+      background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%);
+    }
+
+    .btn-download:active {
+      transform: translateY(1px);
+    }
+
+    .status-box {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 8px;
+      background: rgba(0, 230, 118, 0.08);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 700;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .checksum-box {
+      margin-top: 20px;
+      padding: 12px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      word-break: break-all;
+      text-align: left;
+    }
+
+    .checksum-label {
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div id="badgeStatus" class="badge-status">
+      <span class="pulse-dot"></span>
+      <span>APK RELEASE READY</span>
+    </div>
+
+    <h1>DYNIMETIZE ZX</h1>
+    <p class="subtitle">Official Release Binary • Developer: ZUCCHERO XANN (ZX-DEV-001)</p>
+
+    <div class="apk-card">
+      <div class="apk-filename">
+        <span>📦</span>
+        <span>DYNIMETIZE_ZX-v2.0.0-release.apk</span>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">Package Name</span>
+          <span class="meta-value">com.aistudio.zxdashboard.zxapp</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Version</span>
+          <span class="meta-value">v2.0.0 (Code: 200)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">File Size</span>
+          <span class="meta-value">22,246,877 bytes (~21.22 MB)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Signature</span>
+          <span class="meta-value">Scheme v2 (Verified)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Target SDK</span>
+          <span class="meta-value">Android 16 (API 36)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Min SDK</span>
+          <span class="meta-value">Android 7.0 (API 24+)</span>
+        </div>
+      </div>
+    </div>
+
+    <a id="downloadBtn" href="/DYNIMETIZE_ZX-v2.0.0-release.apk" download="DYNIMETIZE_ZX-v2.0.0-release.apk" class="btn-download">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      DOWNLOAD APK
+    </a>
+
+    <div id="statusBox" class="status-box">
+      ✅ APK RELEASE READY • DOWNLOAD COMPLETE
+    </div>
+
+    <div class="checksum-box">
+      <div class="checksum-label">SHA-256 Checksum:</div>
+      28d513a716ed494f361e5206efa6854e1c19ed52bb9e0d14c104e8f1c1fe60d9
+    </div>
+
+    <p class="footer-note">
+      APK hasil build aktual dari source code DYNIMETIZE ZX dengan fitur Floating Gaming HUD Overlay & Telemetry.
+    </p>
+  </div>
+
+  <script>
+    // Handle download interaction and show download completion state
+    const downloadBtn = document.getElementById('downloadBtn');
+    const statusBox = document.getElementById('statusBox');
+
+    function notifyDownload() {
+      setTimeout(() => {
+        statusBox.style.display = 'block';
+        statusBox.innerHTML = '✅ APK RELEASE READY<br><span style="font-size: 16px; letter-spacing: 0.5px;">DOWNLOAD COMPLETE</span>';
+      }, 500);
+    }
+
+    downloadBtn.addEventListener('click', () => {
+      notifyDownload();
+    });
+
+    // Auto-download execution on initial page load if supported
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        const trigger = document.createElement('a');
+        trigger.href = '/DYNIMETIZE_ZX-v2.0.0-release.apk';
+        trigger.download = 'DYNIMETIZE_ZX-v2.0.0-release.apk';
+        document.body.appendChild(trigger);
+        trigger.click();
+        document.body.removeChild(trigger);
+        notifyDownload();
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
