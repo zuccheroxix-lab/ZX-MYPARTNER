@@ -88,15 +88,15 @@ fun PluginExtensionScreen(
                 id = "shizuku_bridge",
                 name = "Shizuku ADB Privilege Bridge",
                 version = "v1.2.0",
-                description = "Menjembatani akses shell ADB tanpa root untuk memodifikasi parameter sistem Android secara runtime.",
+                description = "Menghubungkan layanan Shizuku ADB resmi untuk diagnostik sistem Android tingkat lanjut.",
                 icon = Icons.Default.Security,
                 isEnabled = false
             ),
             ZenixPlugin(
                 id = "touch_boost",
-                name = "DYNIMETIZE Touch Driver Overclock",
+                name = "DYNIMETIZE Touch Driver Optimizer",
                 version = "v2.4.1",
-                description = "Mengurangi input latency sentuhan jari pada layar hingga 240Hz dengan mem-bypass touch queue filter.",
+                description = "Mengoptimalkan respon antrian sentuhan layar hingga 240Hz untuk navigasi dan gaming berkecepatan tinggi.",
                 icon = Icons.Default.TouchApp,
                 isEnabled = true
             ),

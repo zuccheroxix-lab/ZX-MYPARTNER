@@ -325,11 +325,11 @@
         </div>
         <div class="meta-item">
           <span class="meta-label">File Size</span>
-          <span class="meta-value">22,246,877 bytes (~21.22 MB)</span>
+          <span class="meta-value">19,056,586 bytes (~18.17 MB)</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Signature</span>
-          <span class="meta-value">Scheme v2 (Verified)</span>
+          <span class="meta-value">Scheme v2 (Developer Signed)</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Target SDK</span>
@@ -378,7 +378,7 @@
 
       <div class="checksum-box">
         <div class="checksum-label">SHA-256 Checksum:</div>
-        28d513a716ed494f361e5206efa6854e1c19ed52bb9e0d14c104e8f1c1fe60d9
+        f70ed34ab8142358eca9e88d253ab5af2504f8f0cd8cac7fbefe91e31aac2198
       </div>
     </div>
   </div>
@@ -426,7 +426,7 @@
         if (!response.ok) throw new Error('HTTP ' + response.status);
 
         const contentLength = response.headers.get('content-length');
-        const total = contentLength ? parseInt(contentLength, 10) : 22246877;
+        const total = contentLength ? parseInt(contentLength, 10) : 19056586;
         const reader = response.body.getReader();
         const chunks = [];
         let received = 0;

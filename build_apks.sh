@@ -18,6 +18,15 @@ else
     exit 1
 fi
 
+# Ensure clean production signing with my-upload-key.jks if present
+if [ -f "$SCRIPT_DIR/my-upload-key.jks" ]; then
+    export KEYSTORE_PATH="$SCRIPT_DIR/my-upload-key.jks"
+    export STORE_PASSWORD="dynimetize_zx_2026"
+    export KEY_ALIAS="upload"
+    export KEY_PASSWORD="dynimetize_zx_2026"
+    echo "✔ Production release keystore loaded: my-upload-key.jks"
+fi
+
 echo "[1/3] Building RELEASE APK via $GRADLE_CMD assembleRelease..."
 $GRADLE_CMD assembleRelease
 

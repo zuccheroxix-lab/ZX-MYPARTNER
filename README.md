@@ -26,7 +26,7 @@ Hasil build aktual yang valid, telah diverifikasi, dan siap diunduh / dipublish:
 
 | Tipe APK | Lokasi File | Status | Ukuran File (Bytes) | Ukuran (MB) | Signature Scheme |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Release APK** | `releases/DYNIMETIZE_ZX-v2.0.0-release.apk` | **APK RELEASE READY** | 22,246,877 bytes | ~21.22 MB | APK Signature Scheme v2 (Verified) |
+| **Release APK** | `releases/DYNIMETIZE_ZX-v2.0.0-release.apk` | **APK RELEASE READY** | 19,056,586 bytes | ~18.17 MB | APK Signature Scheme v2 (Developer Signed) |
 
 ### 🚀 Auto Download Release APK
 Aplikasi ini dilengkapi dengan portal web download otomatis pada port 3000 (`/public/index.html`) yang secara otomatis mendeteksi file Release APK dan memicu download langsung tombol **DOWNLOAD APK** (`DYNIMETIZE_ZX-v2.0.0-release.apk`).
@@ -42,8 +42,8 @@ Aplikasi ini dilengkapi dengan portal web download otomatis pada port 3000 (`/pu
 - **Minimum SDK:** `24` (Android 7.0 Nougat ke atas)
 - **Application Label:** `DYNIMETIZE ZX`
 - **Arsitektur APK:** Universal (mendukung semua ABI: arm64-v8a, armeabi-v7a, x86_64, x86)
-- **Status Signing Aktual:** Signed dengan valid release signing configuration, Scheme v2 verified.
-- **SHA-256 Checksum:** `28d513a716ed494f361e5206efa6854e1c19ed52bb9e0d14c104e8f1c1fe60d9`
+- **Status Signing Aktual:** Signed dengan Developer Key resmi (`CN=Zucchero Xann`), Scheme v2 verified. Tidak menggunakan generic debug test key.
+- **SHA-256 Checksum:** `f70ed34ab8142358eca9e88d253ab5af2504f8f0cd8cac7fbefe91e31aac2198`
 - **Status:** **DOWNLOAD COMPLETE**
 
 ---

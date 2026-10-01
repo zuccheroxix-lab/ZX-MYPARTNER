@@ -113,7 +113,7 @@ const server = http.createServer((req, res) => {
         version: '2.0.0',
         versionCode: 200,
         applicationId: 'com.aistudio.zxdashboard.zxapp',
-        sha256: '28d513a716ed494f361e5206efa6854e1c19ed52bb9e0d14c104e8f1c1fe60d9',
+        sha256: 'f70ed34ab8142358eca9e88d253ab5af2504f8f0cd8cac7fbefe91e31aac2198',
       })
     );
     return;
