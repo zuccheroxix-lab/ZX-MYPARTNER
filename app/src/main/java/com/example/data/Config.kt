@@ -50,4 +50,14 @@ object Config {
     const val URL_PUBLIC_COMMUNITY = WA_1
     const val SHIZUKU_PACKAGE_NAME = "moe.shizuku.privileged.api"
     const val FREE_FIRE_PACKAGE = "com.dts.freefiremax"
+
+    // Authentication & Key Request
+    const val WA_KEY_NUMBER = "6287835461585"
+    const val WA_KEY_MESSAGE = "Halo, saya ingin meminta Key akses."
+    const val WA_KEY_URL = "https://wa.me/6287835461585?text=Halo,%20saya%20ingin%20meminta%20Key%20akses."
+
+    // Video Panduan & Tutorial
+    const val VIDEO_PANDUAN_TITLE = "Panduan & Tutorial Aktivasi DYNIMETIZE ZX"
+    const val VIDEO_PANDUAN_URL = "https://youtube.com/@zucchero_xann"
+    const val VIDEO_PANDUAN_CHANNEL_NAME = "ZUCCHERO XANN OFFICIAL"
 }

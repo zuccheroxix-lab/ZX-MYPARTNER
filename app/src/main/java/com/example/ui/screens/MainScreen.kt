@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import com.example.data.AuthManager
 import com.example.data.DeviceInfo
 import com.example.data.DeviceInfoProvider
 import com.example.data.SettingsManager
@@ -27,6 +28,7 @@ import com.example.ui.navigation.NavScreen
 @Composable
 fun MainScreen(
     settingsManager: SettingsManager,
+    authManager: AuthManager? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -69,6 +71,7 @@ fun MainScreen(
                     deviceInfo = deviceInfo,
                     onRefreshDeviceInfo = { refreshDeviceInfo() },
                     settingsManager = settingsManager,
+                    authManager = authManager,
                     isDarkMode = isDarkMode,
                     animationsEnabled = animationsEnabled,
                     hapticsEnabled = hapticsEnabled
@@ -80,6 +83,7 @@ fun MainScreen(
                 deviceInfo = deviceInfo,
                 onRefreshDeviceInfo = { refreshDeviceInfo() },
                 settingsManager = settingsManager,
+                authManager = authManager,
                 isDarkMode = isDarkMode,
                 animationsEnabled = animationsEnabled,
                 hapticsEnabled = hapticsEnabled
@@ -103,6 +107,7 @@ private fun ScreenRouter(
     deviceInfo: DeviceInfo,
     onRefreshDeviceInfo: () -> Unit,
     settingsManager: SettingsManager,
+    authManager: AuthManager?,
     isDarkMode: Boolean,
     animationsEnabled: Boolean,
     hapticsEnabled: Boolean
@@ -120,6 +125,7 @@ private fun ScreenRouter(
         NavScreen.SETTINGS -> {
             SettingsScreen(
                 settingsManager = settingsManager,
+                authManager = authManager,
                 isDarkMode = isDarkMode,
                 animationsEnabled = animationsEnabled,
                 hapticsEnabled = hapticsEnabled,

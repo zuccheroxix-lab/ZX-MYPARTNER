@@ -26,7 +26,7 @@ Hasil build aktual yang valid, telah diverifikasi, dan siap diunduh / dipublish:
 
 | Tipe APK | Lokasi File | Status | Ukuran File (Bytes) | Ukuran (MB) | Signature Scheme |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Release APK** | `releases/DYNIMETIZE_ZX-v2.0.0-release.apk` | **APK RELEASE READY** | 19,056,586 bytes | ~18.17 MB | APK Signature Scheme v2 (Developer Signed) |
+| **Release APK** | `releases/DYNIMETIZE_ZX-v2.0.0-release.apk` | **APK RELEASE READY** | 25,745,362 bytes | ~24.55 MB | APK Signature Scheme v2 (Developer Signed) |
 
 ### 🚀 Auto Download Release APK
 Aplikasi ini dilengkapi dengan portal web download otomatis pada port 3000 (`/public/index.html`) yang secara otomatis mendeteksi file Release APK dan memicu download langsung tombol **DOWNLOAD APK** (`DYNIMETIZE_ZX-v2.0.0-release.apk`).
@@ -42,11 +42,32 @@ Aplikasi ini dilengkapi dengan portal web download otomatis pada port 3000 (`/pu
 - **Minimum SDK:** `24` (Android 7.0 Nougat ke atas)
 - **Application Label:** `DYNIMETIZE ZX`
 - **Arsitektur APK:** Universal (mendukung semua ABI: arm64-v8a, armeabi-v7a, x86_64, x86)
-- **Status Signing Aktual:** Signed dengan Developer Key resmi (`CN=Zucchero Xann`), Scheme v2 verified. Tidak menggunakan generic debug test key.
-- **SHA-256 Checksum:** `f70ed34ab8142358eca9e88d253ab5af2504f8f0cd8cac7fbefe91e31aac2198`
+- **Status Signing Aktual:** Signed dengan Developer Key resmi, Scheme v2 verified.
+- **SHA-256 Checksum:** `8cb87cfc0ad88634b4150163783a972964241d4041826335fef081d584a25cd1`
 - **Status:** **DOWNLOAD COMPLETE**
 
 ---
+
+## 🎬 Halaman Login Full Screen dengan Video Background (1000487036.mp4)
+
+1. **Video Full Screen / Background:**
+   - Video `1000487036.mp4` terpasang langsung di `assets/1000487036.mp4` dan `res/raw/video_1000487036.mp4`.
+   - Dimainkan secara autoplay, looping tanpa henti, muted (tanpa audio yang mengganggu), dan center-crop full screen menggunakan native Android `TextureView` + `MediaPlayer`.
+   - Dilengkapi lapisan gradien gelap transparan (dark overlay) sehingga visual anime Gojo tetap bersinar memukau dan teks/tombol login tetap tajam dan mudah dibaca.
+   - Fallback otomatis ke gambar artwork poster resolusi tinggi jika perangkat tidak mendukung decoding video tertentu.
+
+2. **Login dengan Sidik Jari Asli (BiometricPrompt):**
+   - Menggunakan API resmi AndroidX `BiometricManager` & `BiometricPrompt`.
+   - Memanggil dialog sidik jari bawaan OS Android secara native.
+   - Berhasil -> langsung masuk ke dashboard APK. Gagal -> pesan informatif tanpa crash.
+
+3. **Login dengan Key (Validasi Case-Sensitive):**
+   - Key valid: `DKVX59HH` dan `ZXKUTS5` (case-sensitive).
+   - Verifikasi hash SHA-256 aman tanpa menyimpan plaintext key di sembarang tempat.
+   - Sesi autentikasi tersimpan aman sehingga user tidak diminta login berulang kali.
+
+4. **Minta Key via WhatsApp:**
+   - Tombol "MINTA KEY VIA WHATSAPP" membuka WhatsApp resmi ke nomor `+62 878-3546-1585` dengan pesan otomatis: *"Halo, saya ingin meminta Key akses."*
 
 ## 🚀 Key Features
 

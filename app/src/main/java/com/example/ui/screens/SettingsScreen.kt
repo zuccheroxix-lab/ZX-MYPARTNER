@@ -47,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -56,6 +57,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.AuthManager
 import com.example.data.Config
 import com.example.data.SettingsManager
 import com.example.ui.components.DashboardHeader
@@ -64,6 +66,7 @@ import com.example.ui.components.isShizukuInstalled
 @Composable
 fun SettingsScreen(
     settingsManager: SettingsManager,
+    authManager: AuthManager? = null,
     isDarkMode: Boolean,
     animationsEnabled: Boolean,
     hapticsEnabled: Boolean,
@@ -275,6 +278,35 @@ fun SettingsScreen(
                         Toast.makeText(context, "Lead Developer: ${Config.DEVELOPER_NAME}", Toast.LENGTH_SHORT).show()
                     }
                 )
+            }
+        }
+
+        // Section 5: Keamanan & Sesi Login
+        if (authManager != null) {
+            Spacer(modifier = Modifier.height(14.dp))
+            SettingsSectionTitle(title = "KEAMANAN & AUTENTIKASI")
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color(0xFF141416))
+                    .border(0.8.dp, Color(0xFF282830), RoundedCornerShape(18.dp))
+            ) {
+                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                    SettingsActionTile(
+                        icon = Icons.Default.Lock,
+                        title = "Kunci Aplikasi & Keluar Sesi",
+                        subtitle = "Kembali ke halaman login dengan sidik jari atau key",
+                        badge = "Logout",
+                        badgeColor = Color(0xFFEF4444),
+                        onClick = {
+                            authManager.logout()
+                            Toast.makeText(context, "Sesi login ditutup.", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
             }
         }
 
