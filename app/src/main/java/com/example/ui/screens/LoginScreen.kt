@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedVisibility
@@ -128,7 +129,11 @@ fun LoginScreen(
 
         val biometricStatus = authManager.checkBiometricStatus()
         if (biometricStatus != BiometricManager.BIOMETRIC_SUCCESS) {
-            errorMessage = "Sidik jari belum tersedia di perangkat ini. Silakan daftarkan biometrik di Pengaturan Android atau gunakan Login dengan Key."
+            val msg = "Biometrik tidak tersedia. Gunakan Login dengan Key."
+            errorMessage = msg
+            try {
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {}
             return
         }
 
