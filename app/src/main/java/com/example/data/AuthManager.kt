@@ -24,18 +24,25 @@ class AuthManager(private val context: Context) {
     val lastAuthMethod: StateFlow<String> = _lastAuthMethod.asStateFlow()
 
     /**
-     * Checks if biometric hardware (fingerprint) is available and enrolled.
-     * Uses the official AndroidX BiometricManager API.
+     * Checks detailed biometric hardware and enrollment status using AndroidX BiometricManager.
      */
-    fun isBiometricAvailable(): Boolean {
+    fun checkBiometricStatus(): Int {
         return try {
             val biometricManager = BiometricManager.from(context)
             val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or
                     BiometricManager.Authenticators.BIOMETRIC_WEAK
-            biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
+            biometricManager.canAuthenticate(authenticators)
         } catch (_: Exception) {
-            false
+            BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED
         }
+    }
+
+    /**
+     * Checks if biometric hardware (fingerprint) is available and enrolled.
+     * Returns true only when BIOMETRIC_SUCCESS is reported.
+     */
+    fun isBiometricAvailable(): Boolean {
+        return checkBiometricStatus() == BiometricManager.BIOMETRIC_SUCCESS
     }
 
     /**
