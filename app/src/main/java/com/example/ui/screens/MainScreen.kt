@@ -31,7 +31,8 @@ enum class SubScreen {
     GAMING_HUD,
     GAME_PROFILE,
     SYSTEM_STATUS,
-    CLEAR_CACHE
+    CLEAR_CACHE,
+    GAME_SMOOTHNESS
 }
 
 @Composable
@@ -104,6 +105,11 @@ fun MainScreen(
                         onBack = { activeSubScreen = null }
                     )
                 }
+                SubScreen.GAME_SMOOTHNESS -> {
+                    GameSmoothnessScreen(
+                        onBack = { activeSubScreen = null }
+                    )
+                }
                 null -> {}
             }
         } else {
@@ -127,7 +133,8 @@ fun MainScreen(
                         onOpenGamingHud = { activeSubScreen = SubScreen.GAMING_HUD },
                         onOpenGameProfile = { activeSubScreen = SubScreen.GAME_PROFILE },
                         onOpenSystemStatus = { activeSubScreen = SubScreen.SYSTEM_STATUS },
-                        onOpenClearCache = { activeSubScreen = SubScreen.CLEAR_CACHE }
+                        onOpenClearCache = { activeSubScreen = SubScreen.CLEAR_CACHE },
+                        onOpenGameSmoothness = { activeSubScreen = SubScreen.GAME_SMOOTHNESS }
                     )
                 }
             } else {
@@ -144,7 +151,8 @@ fun MainScreen(
                     onOpenGamingHud = { activeSubScreen = SubScreen.GAMING_HUD },
                     onOpenGameProfile = { activeSubScreen = SubScreen.GAME_PROFILE },
                     onOpenSystemStatus = { activeSubScreen = SubScreen.SYSTEM_STATUS },
-                    onOpenClearCache = { activeSubScreen = SubScreen.CLEAR_CACHE }
+                    onOpenClearCache = { activeSubScreen = SubScreen.CLEAR_CACHE },
+                    onOpenGameSmoothness = { activeSubScreen = SubScreen.GAME_SMOOTHNESS }
                 )
             }
 
@@ -174,7 +182,8 @@ private fun ScreenRouter(
     onOpenGamingHud: () -> Unit,
     onOpenGameProfile: () -> Unit,
     onOpenSystemStatus: () -> Unit,
-    onOpenClearCache: () -> Unit
+    onOpenClearCache: () -> Unit,
+    onOpenGameSmoothness: () -> Unit
 ) {
     when (screen) {
         NavScreen.HOME -> {
@@ -185,7 +194,8 @@ private fun ScreenRouter(
                 onOpenGamingHud = onOpenGamingHud,
                 onOpenGameProfile = onOpenGameProfile,
                 onOpenSystemStatus = onOpenSystemStatus,
-                onOpenClearCache = onOpenClearCache
+                onOpenClearCache = onOpenClearCache,
+                onOpenGameSmoothness = onOpenGameSmoothness
             )
         }
         NavScreen.GAME_LIBRARY -> {
@@ -203,7 +213,8 @@ private fun ScreenRouter(
                 onOpenGamingHud = onOpenGamingHud,
                 onOpenGameProfile = onOpenGameProfile,
                 onOpenSystemStatus = onOpenSystemStatus,
-                onOpenClearCache = onOpenClearCache
+                onOpenClearCache = onOpenClearCache,
+                onOpenGameSmoothness = onOpenGameSmoothness
             )
         }
         NavScreen.PLUGINS -> {

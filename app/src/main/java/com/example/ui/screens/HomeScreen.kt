@@ -22,7 +22,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -71,6 +73,7 @@ fun HomeScreen(
     onOpenGameProfile: () -> Unit = {},
     onOpenSystemStatus: () -> Unit = {},
     onOpenClearCache: () -> Unit = {},
+    onOpenGameSmoothness: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -94,13 +97,14 @@ fun HomeScreen(
         // 2. BANNER
         BannerCard()
 
-        // 2.2 NEW: ZX ENGINE 5 CORE MENUS SECTION
+        // 2.2 NEW: ZX ENGINE 6 CORE MENUS SECTION
         ZxEngineMenusSection(
             onOpenPerformance = onOpenPerformance,
             onOpenGamingHud = onOpenGamingHud,
             onOpenGameProfile = onOpenGameProfile,
             onOpenSystemStatus = onOpenSystemStatus,
-            onOpenClearCache = onOpenClearCache
+            onOpenClearCache = onOpenClearCache,
+            onOpenGameSmoothness = onOpenGameSmoothness
         )
 
         // 2.5 FLOATING GAMING HUD OVERLAY LAUNCHER
@@ -152,7 +156,8 @@ private fun ZxEngineMenusSection(
     onOpenGamingHud: () -> Unit,
     onOpenGameProfile: () -> Unit,
     onOpenSystemStatus: () -> Unit,
-    onOpenClearCache: () -> Unit
+    onOpenClearCache: () -> Unit,
+    onOpenGameSmoothness: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -218,67 +223,27 @@ private fun ZxEngineMenusSection(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Row 3: CLEAR CACHE (Full width)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(DarkCardBg)
-                .border(0.8.dp, Color(0xFF10B981).copy(alpha = 0.5f), RoundedCornerShape(14.dp))
-                .clickable { onOpenClearCache() }
-                .padding(14.dp)
+        // Row 3: CLEAR CACHE & GAME SMOOTHNESS
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x2210B981))
-                            .border(1.dp, Color(0xFF10B981), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CleaningServices,
-                            contentDescription = null,
-                            tint = Color(0xFF34D399),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "CLEAR CACHE",
-                            color = Color.White,
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
-                        )
-                        Text(
-                            text = "Pembersihan aman & terukur tanpa hapus data/akun",
-                            color = TextMuted,
-                            fontSize = 10.5.sp
-                        )
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0x2210B981))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "SAFE",
-                        color = Color(0xFF34D399),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+            EngineMenuTile(
+                modifier = Modifier.weight(1f),
+                title = "CLEAR CACHE",
+                subtitle = "Pembersihan aman & terukur",
+                icon = Icons.Default.CleaningServices,
+                accentColor = Color(0xFF10B981),
+                onClick = onOpenClearCache
+            )
+            EngineMenuTile(
+                modifier = Modifier.weight(1f),
+                title = "GAME SMOOTHNESS",
+                subtitle = "Smooth, 120Hz, Touch & DPI",
+                icon = Icons.Default.Speed,
+                accentColor = Color(0xFF00E5FF),
+                onClick = onOpenGameSmoothness
+            )
         }
     }
 }

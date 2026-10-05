@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
 import com.example.data.AuthManager
+import com.example.data.GameSmoothnessManager
 import com.example.data.SettingsManager
 import com.example.ui.screens.LoginScreen
 import com.example.ui.screens.MainScreen
@@ -20,6 +21,7 @@ class MainActivity : FragmentActivity() {
 
     private lateinit var settingsManager: SettingsManager
     private lateinit var authManager: AuthManager
+    private lateinit var smoothnessManager: GameSmoothnessManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +29,10 @@ class MainActivity : FragmentActivity() {
 
         settingsManager = SettingsManager(applicationContext)
         authManager = AuthManager(applicationContext)
+        smoothnessManager = GameSmoothnessManager(applicationContext)
+
+        // Apply saved smoothness, refresh rate, and window latency config
+        smoothnessManager.applyToWindow(this, smoothnessManager.config.value)
 
         setContent {
             val isDarkMode by settingsManager.isDarkMode.collectAsState()

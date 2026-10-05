@@ -79,6 +79,7 @@ fun SettingsScreen(
     onOpenGameProfile: () -> Unit = {},
     onOpenSystemStatus: () -> Unit = {},
     onOpenClearCache: () -> Unit = {},
+    onOpenGameSmoothness: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -131,6 +132,15 @@ fun SettingsScreen(
                     badge = "HUD",
                     badgeColor = Color(0xFFFFB300),
                     onClick = onOpenGamingHud
+                )
+                HorizontalDivider(color = Color(0xFF222228), thickness = 0.6.dp)
+                SettingsActionTile(
+                    icon = Icons.Default.Speed,
+                    title = "Game Smoothness",
+                    subtitle = "Smooth, Performance, Refresh Rate 120Hz, Touch & DPI",
+                    badge = "Smooth",
+                    badgeColor = Color(0xFF00E5FF),
+                    onClick = onOpenGameSmoothness
                 )
                 HorizontalDivider(color = Color(0xFF222228), thickness = 0.6.dp)
                 SettingsActionTile(
