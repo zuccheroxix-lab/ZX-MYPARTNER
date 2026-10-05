@@ -237,7 +237,13 @@ fun GameLibraryScreen(
                                 .background(Color.White)
                                 .clickable {
                                     triggerHaptic(context)
-                                    boostedRamMb = (280..450).random()
+                                    val am = context.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+                                    val memBefore = android.app.ActivityManager.MemoryInfo().apply { am?.getMemoryInfo(this) }.availMem
+                                    System.gc()
+                                    Runtime.getRuntime().gc()
+                                    val memAfter = android.app.ActivityManager.MemoryInfo().apply { am?.getMemoryInfo(this) }.availMem
+                                    val freed = ((memAfter - memBefore) / (1024 * 1024)).toInt().coerceAtLeast(0)
+                                    boostedRamMb = freed
                                     showBoosterDialog = true
                                 }
                                 .testTag("btn_rocket_boost"),

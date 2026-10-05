@@ -503,10 +503,31 @@ fun GamingHudPanel(
 
                         Spacer(modifier = Modifier.height(4.dp))
 
+                        // Battery, Temp, Ping row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = "TEMP", color = TextMuted, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                Text(text = metrics.tempText, color = Color(0xFF67E8F9), fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = "BAT", color = TextMuted, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                Text(text = metrics.batteryText, color = Color(0xFF86EFAC), fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = "PING", color = TextMuted, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                Text(text = metrics.pingText, color = GoldAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(3.dp))
+
                         Text(
                             text = metrics.ramDetail,
                             color = TextMuted,
-                            fontSize = 9.sp,
+                            fontSize = 8.5.sp,
                             fontFamily = FontFamily.Monospace
                         )
                     }

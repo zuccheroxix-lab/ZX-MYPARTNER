@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -25,6 +26,14 @@ import com.example.data.SettingsManager
 import com.example.ui.navigation.BottomNavBar
 import com.example.ui.navigation.NavScreen
 
+enum class SubScreen {
+    PERFORMANCE,
+    GAMING_HUD,
+    GAME_PROFILE,
+    SYSTEM_STATUS,
+    CLEAR_CACHE
+}
+
 @Composable
 fun MainScreen(
     settingsManager: SettingsManager,
@@ -33,6 +42,7 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     var currentScreen by remember { mutableStateOf(NavScreen.HOME) }
+    var activeSubScreen by remember { mutableStateOf<SubScreen?>(null) }
 
     val isDarkMode by settingsManager.isDarkMode.collectAsState()
     val animationsEnabled by settingsManager.animationsEnabled.collectAsState()
@@ -44,7 +54,12 @@ fun MainScreen(
         deviceInfo = DeviceInfoProvider.getDeviceInfo(context)
     }
 
-    androidx.activity.compose.BackHandler(enabled = currentScreen != NavScreen.HOME) {
+    // System Back button handling
+    BackHandler(enabled = activeSubScreen != null) {
+        activeSubScreen = null
+    }
+
+    BackHandler(enabled = activeSubScreen == null && currentScreen != NavScreen.HOME) {
         currentScreen = NavScreen.HOME
     }
 
@@ -59,45 +74,89 @@ fun MainScreen(
             .statusBarsPadding()
             .testTag("main_screen_root")
     ) {
-        // Screen Content with fluid Crossfade
-        if (animationsEnabled) {
-            Crossfade(
-                targetState = currentScreen,
-                animationSpec = tween(durationMillis = 200),
-                label = "ScreenTransition"
-            ) { screen ->
+        if (activeSubScreen != null) {
+            // Sub-screen destination
+            when (activeSubScreen) {
+                SubScreen.PERFORMANCE -> {
+                    PerformanceScreen(
+                        settingsManager = settingsManager,
+                        onBack = { activeSubScreen = null }
+                    )
+                }
+                SubScreen.GAMING_HUD -> {
+                    GamingHudConfigScreen(
+                        settingsManager = settingsManager,
+                        onBack = { activeSubScreen = null }
+                    )
+                }
+                SubScreen.GAME_PROFILE -> {
+                    GameProfileScreen(
+                        onBack = { activeSubScreen = null }
+                    )
+                }
+                SubScreen.SYSTEM_STATUS -> {
+                    SystemStatusScreen(
+                        onBack = { activeSubScreen = null }
+                    )
+                }
+                SubScreen.CLEAR_CACHE -> {
+                    ClearCacheScreen(
+                        onBack = { activeSubScreen = null }
+                    )
+                }
+                null -> {}
+            }
+        } else {
+            // Main Bottom Tab Screens with fluid transition
+            if (animationsEnabled) {
+                Crossfade(
+                    targetState = currentScreen,
+                    animationSpec = tween(durationMillis = 200),
+                    label = "ScreenTransition"
+                ) { screen ->
+                    ScreenRouter(
+                        screen = screen,
+                        deviceInfo = deviceInfo,
+                        onRefreshDeviceInfo = { refreshDeviceInfo() },
+                        settingsManager = settingsManager,
+                        authManager = authManager,
+                        isDarkMode = isDarkMode,
+                        animationsEnabled = animationsEnabled,
+                        hapticsEnabled = hapticsEnabled,
+                        onOpenPerformance = { activeSubScreen = SubScreen.PERFORMANCE },
+                        onOpenGamingHud = { activeSubScreen = SubScreen.GAMING_HUD },
+                        onOpenGameProfile = { activeSubScreen = SubScreen.GAME_PROFILE },
+                        onOpenSystemStatus = { activeSubScreen = SubScreen.SYSTEM_STATUS },
+                        onOpenClearCache = { activeSubScreen = SubScreen.CLEAR_CACHE }
+                    )
+                }
+            } else {
                 ScreenRouter(
-                    screen = screen,
+                    screen = currentScreen,
                     deviceInfo = deviceInfo,
                     onRefreshDeviceInfo = { refreshDeviceInfo() },
                     settingsManager = settingsManager,
                     authManager = authManager,
                     isDarkMode = isDarkMode,
                     animationsEnabled = animationsEnabled,
-                    hapticsEnabled = hapticsEnabled
+                    hapticsEnabled = hapticsEnabled,
+                    onOpenPerformance = { activeSubScreen = SubScreen.PERFORMANCE },
+                    onOpenGamingHud = { activeSubScreen = SubScreen.GAMING_HUD },
+                    onOpenGameProfile = { activeSubScreen = SubScreen.GAME_PROFILE },
+                    onOpenSystemStatus = { activeSubScreen = SubScreen.SYSTEM_STATUS },
+                    onOpenClearCache = { activeSubScreen = SubScreen.CLEAR_CACHE }
                 )
             }
-        } else {
-            ScreenRouter(
-                screen = currentScreen,
-                deviceInfo = deviceInfo,
-                onRefreshDeviceInfo = { refreshDeviceInfo() },
-                settingsManager = settingsManager,
-                authManager = authManager,
-                isDarkMode = isDarkMode,
-                animationsEnabled = animationsEnabled,
-                hapticsEnabled = hapticsEnabled
+
+            // Floating Bottom Navigation Bar (Home, Library, Settings, Plugin)
+            BottomNavBar(
+                currentScreen = currentScreen,
+                onSelectScreen = { screen ->
+                    currentScreen = screen
+                },
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
-
-        // Floating Bottom Navigation Bar (Home, Library, Settings, Plugin)
-        BottomNavBar(
-            currentScreen = currentScreen,
-            onSelectScreen = { screen ->
-                currentScreen = screen
-            },
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 
@@ -110,13 +169,23 @@ private fun ScreenRouter(
     authManager: AuthManager?,
     isDarkMode: Boolean,
     animationsEnabled: Boolean,
-    hapticsEnabled: Boolean
+    hapticsEnabled: Boolean,
+    onOpenPerformance: () -> Unit,
+    onOpenGamingHud: () -> Unit,
+    onOpenGameProfile: () -> Unit,
+    onOpenSystemStatus: () -> Unit,
+    onOpenClearCache: () -> Unit
 ) {
     when (screen) {
         NavScreen.HOME -> {
             HomeScreen(
                 deviceInfo = deviceInfo,
-                onRefreshDeviceInfo = onRefreshDeviceInfo
+                onRefreshDeviceInfo = onRefreshDeviceInfo,
+                onOpenPerformance = onOpenPerformance,
+                onOpenGamingHud = onOpenGamingHud,
+                onOpenGameProfile = onOpenGameProfile,
+                onOpenSystemStatus = onOpenSystemStatus,
+                onOpenClearCache = onOpenClearCache
             )
         }
         NavScreen.GAME_LIBRARY -> {
@@ -129,7 +198,12 @@ private fun ScreenRouter(
                 isDarkMode = isDarkMode,
                 animationsEnabled = animationsEnabled,
                 hapticsEnabled = hapticsEnabled,
-                appVersion = deviceInfo.appVersion
+                appVersion = deviceInfo.appVersion,
+                onOpenPerformance = onOpenPerformance,
+                onOpenGamingHud = onOpenGamingHud,
+                onOpenGameProfile = onOpenGameProfile,
+                onOpenSystemStatus = onOpenSystemStatus,
+                onOpenClearCache = onOpenClearCache
             )
         }
         NavScreen.PLUGINS -> {

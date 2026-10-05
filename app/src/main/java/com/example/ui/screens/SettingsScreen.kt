@@ -57,6 +57,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.SdStorage
 import com.example.data.AuthManager
 import com.example.data.Config
 import com.example.data.SettingsManager
@@ -71,6 +74,11 @@ fun SettingsScreen(
     animationsEnabled: Boolean,
     hapticsEnabled: Boolean,
     appVersion: String,
+    onOpenPerformance: () -> Unit = {},
+    onOpenGamingHud: () -> Unit = {},
+    onOpenGameProfile: () -> Unit = {},
+    onOpenSystemStatus: () -> Unit = {},
+    onOpenClearCache: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -94,6 +102,67 @@ fun SettingsScreen(
             subtitle = "Settings Menu ZX",
             developerName = Config.DEVELOPER_NAME
         )
+
+        // Section 0: ZX ENGINE 5 CORE MENUS
+        SettingsSectionTitle(title = "ZX ENGINE CONTROLS & TOOLS")
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(Color(0xFF141416))
+                .border(0.8.dp, Color(0xFF282830), RoundedCornerShape(18.dp))
+        ) {
+            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                SettingsActionTile(
+                    icon = Icons.Default.ElectricBolt,
+                    title = "Performance Mode",
+                    subtitle = "Performance, Balanced, Battery Saver & Live Telemetry",
+                    badge = "Engine",
+                    badgeColor = Color(0xFFEF4444),
+                    onClick = onOpenPerformance
+                )
+                HorizontalDivider(color = Color(0xFF222228), thickness = 0.6.dp)
+                SettingsActionTile(
+                    icon = Icons.Default.SportsEsports,
+                    title = "Gaming HUD Overlay",
+                    subtitle = "FPS, RAM, Temp, Battery, Ping & Posisi HUD",
+                    badge = "HUD",
+                    badgeColor = Color(0xFFFFB300),
+                    onClick = onOpenGamingHud
+                )
+                HorizontalDivider(color = Color(0xFF222228), thickness = 0.6.dp)
+                SettingsActionTile(
+                    icon = Icons.Default.Tune,
+                    title = "Game Profiles",
+                    subtitle = "Pengaturan terisolasi khusus masing-masing game",
+                    badge = "Per-Game",
+                    badgeColor = Color(0xFF38BDF8),
+                    onClick = onOpenGameProfile
+                )
+                HorizontalDivider(color = Color(0xFF222228), thickness = 0.6.dp)
+                SettingsActionTile(
+                    icon = Icons.Default.Info,
+                    title = "System Status",
+                    subtitle = "Android, RAM, Storage, Baterai, Sensor Biometrik",
+                    badge = "Specs",
+                    badgeColor = Color(0xFFA78BFA),
+                    onClick = onOpenSystemStatus
+                )
+                HorizontalDivider(color = Color(0xFF222228), thickness = 0.6.dp)
+                SettingsActionTile(
+                    icon = Icons.Default.CleaningServices,
+                    title = "Clear Cache",
+                    subtitle = "Pembersihan cache terukur & aman tanpa hapus data",
+                    badge = "Clean",
+                    badgeColor = Color(0xFF10B981),
+                    onClick = onOpenClearCache
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         // Section 1: Shizuku Service Privileged Access
         SettingsSectionTitle(title = "SHIZUKU PRIVILEGED SERVICE")
