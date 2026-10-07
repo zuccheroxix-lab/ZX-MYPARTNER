@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,42 +28,38 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DeviceThermostat
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.PowerSettingsNew
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -70,94 +67,62 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.SettingsManager
-import com.example.service.HudMetrics
-import com.example.service.HudTelemetryTracker
+import com.example.service.CrosshairService
 import com.example.service.OverlayService
-
-private val GoldAccent = Color(0xFFFFB300)
-private val DarkCardBg = Color(0xFF141722)
-private val BorderColor = Color(0xFF262C3E)
-private val TextMuted = Color(0xFF94A3B8)
+import com.example.ui.theme.LocalAccentColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GamingHudConfigScreen(
     settingsManager: SettingsManager,
-    onBack: () -> Unit,
+    onBack: () -> Unit = {},
+    onNavigateToPage: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val accentColor = LocalAccentColor.current
 
-    val isServiceRunning by OverlayService.isServiceRunning.collectAsState()
+    val isHudRunning by OverlayService.isServiceRunning.collectAsState()
+    val isCrosshairRunning by CrosshairService.isServiceRunning.collectAsState()
+
     val hudPosition by settingsManager.hudPosition.collectAsState()
-    val isHudShown by settingsManager.isHudShown.collectAsState()
-
-    val showPing by settingsManager.showPing.collectAsState()
     val showFps by settingsManager.showFps.collectAsState()
     val showRam by settingsManager.showRam.collectAsState()
     val showTemp by settingsManager.showTemp.collectAsState()
     val showBattery by settingsManager.showBattery.collectAsState()
+    val showPing by settingsManager.showPing.collectAsState()
 
-    var liveMetrics by remember { mutableStateOf(HudMetrics()) }
+    val crosshairStyle by settingsManager.crosshairStyle.collectAsState()
+    val crosshairSize by settingsManager.crosshairSize.collectAsState()
+    val crosshairColorLong by settingsManager.crosshairColor.collectAsState()
+    val crosshairOpacity by settingsManager.crosshairOpacity.collectAsState()
+
+    val crosshairColor = Color(crosshairColorLong)
 
     BackHandler { onBack() }
-
-    // Start in-app telemetry while viewing this configuration screen
-    DisposableEffect(Unit) {
-        val tracker = HudTelemetryTracker(context) { metrics ->
-            liveMetrics = metrics
-        }
-        tracker.start()
-        onDispose {
-            tracker.stop()
-        }
-    }
-
-    fun toggleOverlayService() {
-        val hasPermission = Settings.canDrawOverlays(context)
-        if (!hasPermission) {
-            Toast.makeText(context, "Izin Overlay Diperlukan. Membuka Pengaturan...", Toast.LENGTH_SHORT).show()
-            try {
-                val intent = Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:${context.packageName}")
-                ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
-                context.startActivity(intent)
-            } catch (_: Exception) {}
-            return
-        }
-
-        if (isServiceRunning) {
-            OverlayService.stop(context)
-            Toast.makeText(context, "Gaming HUD Dihentikan", Toast.LENGTH_SHORT).show()
-        } else {
-            OverlayService.start(context)
-            Toast.makeText(context, "Gaming HUD Aktif di Layar", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A0C))
+            .background(Color(0xFF090A0D))
             .testTag("gaming_hud_config_screen")
     ) {
+        // Top App Bar
         TopAppBar(
             title = {
                 Column {
                     Text(
-                        text = "GAMING HUD OVERLAY",
+                        text = "OVERLAY & AIM",
                         color = Color.White,
-                        fontSize = 17.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.8.sp
                     )
                     Text(
-                        text = "Real-time Floating Telemetry & Controls",
-                        color = GoldAccent,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
+                        text = "Gaming Telemetry & Crosshair Assist",
+                        color = Color(0xFF8E8E98),
+                        fontSize = 11.sp
                     )
                 }
             },
@@ -173,334 +138,418 @@ fun GamingHudConfigScreen(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A0A0C))
         )
 
+        // Horizontal Page Quick Buttons (Smooth navigation without getting trapped)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = { onNavigateToPage(2) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+            ) {
+                Text("← Game Space", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+
+            OutlinedButton(
+                onClick = { onNavigateToPage(0) },
+                modifier = Modifier.weight(0.8f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+            ) {
+                Icon(Icons.Default.Home, contentDescription = null, tint = accentColor, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Home", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+
+            OutlinedButton(
+                onClick = { onNavigateToPage(4) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+            ) {
+                Text("Pengaturan →", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 10.dp)
+                .padding(horizontal = 20.dp)
         ) {
-            // Section 1: LIVE IN-APP HUD PREVIEW
-            Text(
-                text = "LIVE HUD PREVIEW",
-                color = GoldAccent,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(10.dp))
+            // CARD 1: GAMING HUD TELEMETRY OVERLAY
+            OverlayConfigCard {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFFB300).copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.SportsEsports, contentDescription = null, tint = Color(0xFFFFB300), modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("Gaming HUD Telemetry", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text("Monitor status performa mengambang di atas game", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                            }
+                        }
 
-            // Interactive HUD Preview Box
-            AnimatedVisibility(visible = isHudShown) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color(0xFF101420), Color(0xFF0C0E16))
-                            )
+                        Switch(
+                            checked = isHudRunning,
+                            onCheckedChange = { enable ->
+                                if (enable) {
+                                    if (!Settings.canDrawOverlays(context)) {
+                                        Toast.makeText(context, "Izin Tampilkan di Atas Aplikasi Diperlukan", Toast.LENGTH_SHORT).show()
+                                        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")).apply {
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        }
+                                        context.startActivity(intent)
+                                    } else {
+                                        OverlayService.start(context)
+                                    }
+                                } else {
+                                    OverlayService.stop(context)
+                                }
+                            },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFFFFB300))
                         )
-                        .border(1.2.dp, GoldAccent, RoundedCornerShape(18.dp))
-                        .padding(16.dp)
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF10B981))
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = Color(0xFF22242E), thickness = 0.6.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text("Posisi Default Layar:", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    val positions = listOf("TOP_LEFT", "TOP_CENTER", "TOP_RIGHT", "BOTTOM_CENTER")
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        positions.forEach { pos ->
+                            val label = when (pos) {
+                                "TOP_LEFT" -> "Kiri Atas"
+                                "TOP_CENTER" -> "Tengah Atas"
+                                "TOP_RIGHT" -> "Kanan Atas"
+                                else -> "Bawah"
+                            }
+                            val isSel = hudPosition == pos
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSel) Color(0xFFFFB300).copy(alpha = 0.2f) else Color(0xFF171A24))
+                                    .border(0.8.dp, if (isSel) Color(0xFFFFB300) else Color(0xFF262A3B), RoundedCornerShape(8.dp))
+                                    .clickable { settingsManager.setHudPosition(pos) }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Text(
-                                    text = "LIVE TELEMETRY HUD",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 0.8.sp
+                                    text = label,
+                                    color = if (isSel) Color(0xFFFFB300) else Color(0xFF9E9EA8),
+                                    fontSize = 10.sp,
+                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
-                            Text(
-                                text = "POS: $hudPosition",
-                                color = GoldAccent,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
-                            )
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Elemen Telemetri Aktif:", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                        // Live metrics display in HUD
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (showFps) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(text = liveMetrics.fpsText, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace)
-                                    Text(text = "FPS", color = GoldAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            if (showRam) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(text = liveMetrics.ramText, color = GoldAccent, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                    Text(text = "RAM", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            if (showTemp) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(text = liveMetrics.tempText, color = Color(0xFF67E8F9), fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                    Text(text = "SUHU", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            if (showBattery) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(text = liveMetrics.batteryText, color = Color(0xFF86EFAC), fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                    Text(text = "BATERAI", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            if (showPing) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(text = liveMetrics.pingText, color = GoldAccent, fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
-                                    Text(text = "PING", color = TextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
+                    // Metric toggles
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        MetricTogglePill("FPS", showFps, Color.White, modifier = Modifier.weight(1f)) { settingsManager.setShowFps(it) }
+                        MetricTogglePill("RAM", showRam, Color(0xFFFFB300), modifier = Modifier.weight(1f)) { settingsManager.setShowRam(it) }
+                        MetricTogglePill("Suhu", showTemp, Color(0xFF67E8F9), modifier = Modifier.weight(1f)) { settingsManager.setShowTemp(it) }
+                        MetricTogglePill("Baterai", showBattery, Color(0xFF86EFAC), modifier = Modifier.weight(1f)) { settingsManager.setShowBattery(it) }
+                        MetricTogglePill("Ping", showPing, Color(0xFFA78BFA), modifier = Modifier.weight(1f)) { settingsManager.setShowPing(it) }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Master Show/Hide Toggle
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(DarkCardBg)
-                    .border(0.8.dp, BorderColor, RoundedCornerShape(14.dp))
-                    .padding(14.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (isHudShown) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = null,
-                            tint = GoldAccent,
-                            modifier = Modifier.size(20.dp)
+            // CARD 2: CROSSHAIR AIM OVERLAY
+            OverlayConfigCard {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFF2A2A).copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Speed, contentDescription = null, tint = Color(0xFFFF2A2A), modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("Crosshair Aim Reticle", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text("Titik bidik presisi permanen di tengah layar", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                            }
+                        }
+
+                        Switch(
+                            checked = isCrosshairRunning,
+                            onCheckedChange = { enable ->
+                                if (enable) {
+                                    if (!Settings.canDrawOverlays(context)) {
+                                        Toast.makeText(context, "Izin Tampilkan di Atas Aplikasi Diperlukan", Toast.LENGTH_SHORT).show()
+                                        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")).apply {
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        }
+                                        context.startActivity(intent)
+                                    } else {
+                                        settingsManager.setCrosshairEnabled(true)
+                                        CrosshairService.start(context)
+                                    }
+                                } else {
+                                    settingsManager.setCrosshairEnabled(false)
+                                    CrosshairService.stop(context)
+                                }
+                            },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFFFF2A2A))
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "Show / Hide Gaming HUD",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = if (isHudShown) "HUD aktif dan terlihat di game" else "HUD disembunyikan",
-                                color = TextMuted,
-                                fontSize = 11.sp
-                            )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = Color(0xFF22242E), thickness = 0.6.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Crosshair Preview Canvas Box
+                    Text("Pratinjau Reticle:", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF0C0E14))
+                            .border(0.8.dp, Color(0xFF1E2232), RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Canvas(modifier = Modifier.size(90.dp)) {
+                            val c = center
+                            val effectiveColor = crosshairColor.copy(alpha = crosshairOpacity)
+                            val sizePx = (crosshairSize * density).coerceAtLeast(14f)
+                            val half = sizePx / 2f
+
+                            when (crosshairStyle) {
+                                "DOT" -> {
+                                    drawCircle(color = effectiveColor, radius = half.coerceIn(4f, 18f), center = c)
+                                }
+                                "CIRCLE_DOT" -> {
+                                    drawCircle(color = effectiveColor, radius = half, center = c, style = Stroke(width = 2.5f))
+                                    drawCircle(color = effectiveColor, radius = 3.5f, center = c)
+                                }
+                                "T_SHAPE" -> {
+                                    drawLine(effectiveColor, Offset(c.x, c.y - half), Offset(c.x, c.y + 4f), strokeWidth = 3f)
+                                    drawLine(effectiveColor, Offset(c.x - half, c.y), Offset(c.x + half, c.y), strokeWidth = 3f)
+                                }
+                                "SNIPER" -> {
+                                    drawCircle(effectiveColor, half, c, style = Stroke(2f))
+                                    drawCircle(effectiveColor, half * 0.45f, c, style = Stroke(1.5f))
+                                    drawLine(effectiveColor, Offset(c.x - half * 1.3f, c.y), Offset(c.x + half * 1.3f, c.y), 2f)
+                                    drawLine(effectiveColor, Offset(c.x, c.y - half * 1.3f), Offset(c.x, c.y + half * 1.3f), 2f)
+                                    drawCircle(effectiveColor, 3f, c)
+                                }
+                                else -> {
+                                    // CLASSIC
+                                    drawLine(effectiveColor, Offset(c.x - half, c.y), Offset(c.x - 4f, c.y), 3f)
+                                    drawLine(effectiveColor, Offset(c.x + 4f, c.y), Offset(c.x + half, c.y), 3f)
+                                    drawLine(effectiveColor, Offset(c.x, c.y - half), Offset(c.x, c.y - 4f), 3f)
+                                    drawLine(effectiveColor, Offset(c.x, c.y + 4f), Offset(c.x, c.y + half), 3f)
+                                    drawCircle(effectiveColor, 2f, c)
+                                }
+                            }
                         }
                     }
-                    Switch(
-                        checked = isHudShown,
-                        onCheckedChange = { settingsManager.setHudShown(it) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.Black,
-                            checkedTrackColor = GoldAccent
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Style selector
+                    Text("Gaya Bidikan:", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    val styles = listOf(
+                        "CLASSIC" to "Classic",
+                        "DOT" to "Dot",
+                        "CIRCLE_DOT" to "Circle Dot",
+                        "T_SHAPE" to "T-Shape",
+                        "SNIPER" to "Sniper"
+                    )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        styles.forEach { (stKey, label) ->
+                            val isSel = crosshairStyle == stKey
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSel) Color(0xFFFF2A2A).copy(alpha = 0.2f) else Color(0xFF171A24))
+                                    .border(0.8.dp, if (isSel) Color(0xFFFF2A2A) else Color(0xFF262A3B), RoundedCornerShape(8.dp))
+                                    .clickable { settingsManager.setCrosshairStyle(stKey) }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (isSel) Color(0xFFFF2A2A) else Color(0xFF9E9EA8),
+                                    fontSize = 10.sp,
+                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Size Slider
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Ukuran Reticle", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                        Text("${crosshairSize}dp", color = Color(0xFFFF2A2A), fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                    }
+                    Slider(
+                        value = crosshairSize.toFloat(),
+                        onValueChange = { settingsManager.setCrosshairSize(it.toInt()) },
+                        valueRange = 16f..64f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = Color(0xFFFF2A2A),
+                            activeTrackColor = Color(0xFFFF2A2A),
+                            inactiveTrackColor = Color(0xFF262A3B)
                         )
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Opacity Slider
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Transparansi (Opacity)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                        Text("${(crosshairOpacity * 100).toInt()}%", color = Color(0xFFFF2A2A), fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                    }
+                    Slider(
+                        value = crosshairOpacity,
+                        onValueChange = { settingsManager.setCrosshairOpacity(it) },
+                        valueRange = 0.2f..1f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = Color(0xFFFF2A2A),
+                            activeTrackColor = Color(0xFFFF2A2A),
+                            inactiveTrackColor = Color(0xFF262A3B)
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Color Palette
+                    Text("Warna Reticle:", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    val palette = listOf(
+                        0xFFFF2A2AL to "Merah",
+                        0xFF00FF66L to "Hijau",
+                        0xFF00E5FFL to "Cyan",
+                        0xFFFFD700L to "Kuning",
+                        0xFFFFFFFFL to "Putih",
+                        0xFFA855F7L to "Ungu"
+                    )
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        palette.forEach { (colorVal, _) ->
+                            val isSel = crosshairColorLong == colorVal
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(colorVal))
+                                    .border(
+                                        width = if (isSel) 2.5.dp else 1.dp,
+                                        color = if (isSel) Color.White else Color(0xFF262A3B),
+                                        shape = CircleShape
+                                    )
+                                    .clickable { settingsManager.setCrosshairColor(colorVal) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isSel) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = if (colorVal == 0xFFFFFFFFL || colorVal == 0xFFFFD700L) Color.Black else Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Section 2: HUD POSITION SELECTOR
-            Text(
-                text = "HUD SCREEN POSITION",
-                color = GoldAccent,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                PositionOptionButton(
-                    modifier = Modifier.weight(1f),
-                    label = "Top Left",
-                    isSelected = hudPosition == "TOP_LEFT",
-                    onClick = { settingsManager.setHudPosition("TOP_LEFT") }
-                )
-                PositionOptionButton(
-                    modifier = Modifier.weight(1f),
-                    label = "Top Right",
-                    isSelected = hudPosition == "TOP_RIGHT",
-                    onClick = { settingsManager.setHudPosition("TOP_RIGHT") }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                PositionOptionButton(
-                    modifier = Modifier.weight(1f),
-                    label = "Bottom Left",
-                    isSelected = hudPosition == "BOTTOM_LEFT",
-                    onClick = { settingsManager.setHudPosition("BOTTOM_LEFT") }
-                )
-                PositionOptionButton(
-                    modifier = Modifier.weight(1f),
-                    label = "Bottom Right",
-                    isSelected = hudPosition == "BOTTOM_RIGHT",
-                    onClick = { settingsManager.setHudPosition("BOTTOM_RIGHT") }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Section 3: METRIC VISIBILITY TOGGLES
-            Text(
-                text = "TAMPILKAN INDIKATOR HUD",
-                color = GoldAccent,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(DarkCardBg)
-                    .border(0.8.dp, BorderColor, RoundedCornerShape(14.dp))
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
-            ) {
-                MetricToggleRow("Frame Rate (FPS)", showFps) { settingsManager.setShowFps(it) }
-                MetricToggleRow("Memory Usage (RAM)", showRam) { settingsManager.setShowRam(it) }
-                MetricToggleRow("Suhu Baterai (Temp)", showTemp) { settingsManager.setShowTemp(it) }
-                MetricToggleRow("Level Baterai (Battery)", showBattery) { settingsManager.setShowBattery(it) }
-                MetricToggleRow("Jaringan Latensi (Ping ms)", showPing) { settingsManager.setShowPing(it) }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Section 4: FLOATING WINDOW OVERLAY SERVICE TRIGGER
-            Button(
-                onClick = { toggleOverlayService() },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isServiceRunning) Color(0xFFEF4444) else GoldAccent
-                ),
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Icon(
-                    imageVector = if (isServiceRunning) Icons.Default.PowerSettingsNew else Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = if (isServiceRunning) Color.White else Color.Black
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (isServiceRunning) "STOP FLOATING OVERLAY HUD" else "START FLOATING OVERLAY HUD",
-                    color = if (isServiceRunning) Color.White else Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.5.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(110.dp))
         }
     }
 }
 
 @Composable
-private fun PositionOptionButton(
-    modifier: Modifier = Modifier,
+private fun OverlayConfigCard(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color(0xFF13151D))
+            .border(0.8.dp, Color(0xFF222533), RoundedCornerShape(18.dp))
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun MetricTogglePill(
     label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
+    checked: Boolean,
+    color: Color,
+    modifier: Modifier = Modifier,
+    onCheckedChange: (Boolean) -> Unit
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(if (isSelected) Color(0xFF221A0E) else DarkCardBg)
-            .border(
-                width = if (isSelected) 1.5.dp else 0.8.dp,
-                color = if (isSelected) GoldAccent else BorderColor,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .clickable { onClick() }
-            .padding(vertical = 12.dp),
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (checked) color.copy(alpha = 0.2f) else Color(0xFF171A24))
+            .border(0.8.dp, if (checked) color else Color(0xFF262A3B), RoundedCornerShape(8.dp))
+            .clickable { onCheckedChange(!checked) }
+            .padding(vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (isSelected) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    tint = GoldAccent,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-            }
-            Text(
-                text = label,
-                color = if (isSelected) GoldAccent else Color.White,
-                fontSize = 13.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-            )
-        }
-    }
-}
-
-@Composable
-private fun MetricToggleRow(
-    title: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
         Text(
-            text = title,
-            color = Color.White,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.Black,
-                checkedTrackColor = GoldAccent
-            )
+            text = label,
+            color = if (checked) color else Color(0xFF8E8E98),
+            fontSize = 11.sp,
+            fontWeight = if (checked) FontWeight.Bold else FontWeight.Normal
         )
     }
 }

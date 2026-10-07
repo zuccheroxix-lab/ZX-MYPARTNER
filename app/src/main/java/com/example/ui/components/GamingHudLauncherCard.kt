@@ -194,7 +194,7 @@ fun GamingHudLauncherCard(
 
             // Subtitle Description & Feature Highlights
             Text(
-                text = "Muncul di atas game (Free Fire, PUBG, MLBB) dengan real-time FPS, RAM, CPU telemetry, 8 kontrol aksi game, dan slider brightness/volume tanpa keluar dari game.",
+                text = "Muncul di atas game (Free Fire, PUBG, MLBB) dengan monitor status FPS, RAM, telemetri hardware, serta kontrol cepat game dan volume.",
                 color = Color(0xFF94A3B8),
                 fontSize = 12.sp,
                 lineHeight = 16.sp
@@ -207,9 +207,9 @@ fun GamingHudLauncherCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                HudBadge(label = "REAL-TIME FPS", active = isRunning)
+                HudBadge(label = "MONITOR FPS", active = isRunning)
                 HudBadge(label = "RAM CLEANER", active = isRunning)
-                HudBadge(label = "240Hz TOUCH", active = isRunning)
+                HudBadge(label = "TOUCH OPTIMIZER", active = isRunning)
                 HudBadge(label = "HUD OVERLAY", active = true)
             }
         }

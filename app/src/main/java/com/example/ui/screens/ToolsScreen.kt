@@ -2,14 +2,15 @@ package com.example.ui.screens
 
 import android.app.Activity
 import android.content.Context
-import android.hardware.Sensor
-import android.hardware.camera2.CameraManager
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,36 +25,50 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.BatteryChargingFull
-import androidx.compose.material.icons.filled.FlashlightOn
-import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.NetworkCheck
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DisplaySettings
+import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.SdStorage
-import androidx.compose.material.icons.filled.Sensors
-import androidx.compose.material.icons.filled.Vibration
-import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,865 +76,875 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.data.BatteryInfo
+import com.example.data.ApplyResult
 import com.example.data.DeviceInfoProvider
-import com.example.data.MemoryInfoData
-import com.example.data.NetworkDiagnosticInfo
-import com.example.data.StorageInfoData
-import com.example.ui.theme.BlueAccent
-import com.example.ui.theme.CardBorder
-import com.example.ui.theme.CardBorderSubtle
-import com.example.ui.theme.CyanAccent
-import com.example.ui.theme.CyanGlow
-import com.example.ui.theme.StatusAmber
-import com.example.ui.theme.StatusGreen
-import com.example.ui.theme.StatusRed
-import com.example.ui.theme.SurfaceCard
-import com.example.ui.theme.SurfaceDark
-import com.example.ui.theme.SurfaceElevated
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+import com.example.data.GameSmoothnessManager
+import com.example.data.ImportedZipConfig
+import com.example.data.SettingsManager
+import com.example.service.CrosshairService
+import com.example.service.OverlayService
+import com.example.ui.theme.LocalAccentColor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.InetAddress
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ToolsScreen(
+    onNavigateToPage: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val accentColor = LocalAccentColor.current
+    val scrollState = rememberScrollState()
 
-    // Real-time State
-    var batteryInfo by remember { mutableStateOf(DeviceInfoProvider.getBatteryInfo(context)) }
-    var memoryInfo by remember { mutableStateOf(DeviceInfoProvider.getMemoryInfo(context)) }
-    var storageInfo by remember { mutableStateOf(DeviceInfoProvider.getStorageInfo()) }
-    var networkInfo by remember { mutableStateOf(DeviceInfoProvider.getNetworkDiagnostic(context)) }
-    var sensorsList by remember { mutableStateOf<List<Sensor>>(emptyList()) }
+    val settingsManager = remember { SettingsManager(context) }
+    val smoothnessManager = remember { GameSmoothnessManager(context) }
+    val savedSmoothnessConfig by smoothnessManager.config.collectAsState()
 
-    // Ping State
-    var isPinging by remember { mutableStateOf(false) }
-    var pingResultMs by remember { mutableStateOf<Long?>(null) }
+    // Sub-Tabs: 0 = DPI & Resolution, 1 = DNS Kustom, 2 = Crosshair & HUD, 3 = Render Selection
+    var selectedTab by remember { mutableIntStateOf(0) }
 
-    // Flashlight State
-    var isFlashlightOn by remember { mutableStateOf(false) }
-    val hasFlashlight = remember { DeviceInfoProvider.hasFlashlight(context) }
+    // DPI & Resolution States
+    var manualDpiText by remember { mutableStateOf(savedSmoothnessConfig.customDpi.toString()) }
+    var manualResolutionText by remember { mutableStateOf(savedSmoothnessConfig.customResolution) }
+    var isImportingZip by remember { mutableStateOf(false) }
+    var importedZipInfo by remember { mutableStateOf<ImportedZipConfig?>(null) }
+    var zipErrorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Screen Test State
-    var isScreenTestOpen by remember { mutableStateOf(false) }
-    val testColors = listOf(Color.Red, Color.Green, Color.Blue, Color.White, Color.Black)
-    var currentColorIndex by remember { mutableStateOf(0) }
+    // Countdown & Apply states
+    var showCountdownDialog by remember { mutableStateOf(false) }
+    var countdownSeconds by remember { mutableIntStateOf(5) }
+    var countdownJob by remember { mutableStateOf<Job?>(null) }
+    var applyResult by remember { mutableStateOf<ApplyResult?>(null) }
+    var showResultDialog by remember { mutableStateOf(false) }
 
-    // Load initial sensors list
-    LaunchedEffect(Unit) {
-        sensorsList = DeviceInfoProvider.getDeviceSensors(context)
-    }
+    // DNS State
+    val savedDns by settingsManager.customDns.collectAsState()
+    var dnsInput by remember { mutableStateOf(savedDns) }
+    var dnsPingResult by remember { mutableStateOf<String?>(null) }
+    var isPingingDns by remember { mutableStateOf(false) }
 
-    // Safety: turn off flashlight when leaving composable
-    DisposableEffect(Unit) {
-        onDispose {
-            if (isFlashlightOn) {
-                try {
-                    val cm = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
-                    val cameraId = cm?.cameraIdList?.firstOrNull()
-                    if (cameraId != null) {
-                        cm.setTorchMode(cameraId, false)
+    // Crosshair State
+    val isCrosshairRunning by CrosshairService.isServiceRunning.collectAsState()
+    val isHudRunning by OverlayService.isServiceRunning.collectAsState()
+    val crosshairStyle by settingsManager.crosshairStyle.collectAsState()
+    val crosshairSize by settingsManager.crosshairSize.collectAsState()
+    val crosshairColorLong by settingsManager.crosshairColor.collectAsState()
+    val crosshairOpacity by settingsManager.crosshairOpacity.collectAsState()
+    val crosshairColor = Color(crosshairColorLong)
+
+    // Render Selection
+    val renderMode by settingsManager.renderMode.collectAsState()
+
+    // Storage Access Framework launcher for ZIP files
+    val zipPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            isImportingZip = true
+            zipErrorMessage = null
+            scope.launch {
+                val result = smoothnessManager.parseZipConfig(uri)
+                isImportingZip = false
+                result.fold(
+                    onSuccess = { config ->
+                        importedZipInfo = config
+                        config.dpi?.let { manualDpiText = it.toString() }
+                        config.resolution?.let { manualResolutionText = it }
+                        Toast.makeText(context, "Konfigurasi ZIP terbaca dengan aman!", Toast.LENGTH_SHORT).show()
+                    },
+                    onFailure = { error ->
+                        zipErrorMessage = error.localizedMessage ?: "File ZIP tidak valid atau tidak kompatibel."
                     }
-                } catch (_: Exception) {}
+                )
             }
         }
     }
 
-    fun vibrateDevice(pattern: Int) {
-        try {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-                vm?.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-            }
-
-            if (vibrator != null && vibrator.hasVibrator()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    when (pattern) {
-                        1 -> vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-                        2 -> vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 80, 100, 120), -1))
-                        else -> vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 150, 150, 150, 150, 300), -1))
-                    }
-                } else {
-                    @Suppress("DEPRECATION")
-                    vibrator.vibrate(80)
-                }
-                Toast.makeText(context, "Haptic pulse emitted", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "Vibrator hardware not available on this device", Toast.LENGTH_SHORT).show()
-            }
-        } catch (_: Exception) {
-            Toast.makeText(context, "Vibrator execution error", Toast.LENGTH_SHORT).show()
+    BackHandler {
+        if (showCountdownDialog) {
+            countdownJob?.cancel()
+            showCountdownDialog = false
+        } else {
+            onNavigateToPage(0)
         }
     }
 
-    fun toggleFlashlight() {
-        if (!hasFlashlight) {
-            Toast.makeText(context, "Flashlight hardware unavailable on this device", Toast.LENGTH_SHORT).show()
-            return
-        }
-        try {
-            val cm = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
-            val cameraId = cm?.cameraIdList?.firstOrNull()
-            if (cameraId != null) {
-                val nextState = !isFlashlightOn
-                cm.setTorchMode(cameraId, nextState)
-                isFlashlightOn = nextState
-                Toast.makeText(context, if (nextState) "Flashlight turned ON" else "Flashlight turned OFF", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            Toast.makeText(context, "Cannot toggle torch: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    LazyColumn(
+    Column(
         modifier = modifier
             .fillMaxSize()
-            .testTag("tools_screen"),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .background(Color(0xFF090A0D))
+            .testTag("tools_screen_root")
     ) {
-        // Header
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 14.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(CyanAccent)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
+        // Top App Bar
+        TopAppBar(
+            title = {
+                Column {
                     Text(
-                        text = "DIAGNOSTIC & HARDWARE SUITE",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            color = CyanAccent,
-                            letterSpacing = 1.2.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    )
-                }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Tools",
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        color = TextPrimary,
+                        text = "GAMING TOOLS",
+                        color = Color.White,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
+                        letterSpacing = 0.8.sp
                     )
-                )
-                Text(
-                    text = "Functional hardware diagnostics powered by official Android APIs",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextSecondary,
-                        fontSize = 12.sp
-                    )
-                )
-            }
-        }
-
-        // TOOL 1: BATTERY TELEMETRY
-        item {
-            ToolCardContainer(
-                title = "BATTERY TELEMETRY",
-                subtitle = "BatteryManager Broadcast Receiver",
-                icon = Icons.Default.BatteryChargingFull,
-                onRefresh = {
-                    batteryInfo = DeviceInfoProvider.getBatteryInfo(context)
-                    Toast.makeText(context, "Battery data refreshed", Toast.LENGTH_SHORT).show()
-                }
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "${batteryInfo.level}%",
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                color = if (batteryInfo.level > 20) StatusGreen else StatusRed,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 32.sp
-                            )
-                        )
-                        Text(
-                            text = "${batteryInfo.status} • ${batteryInfo.chargingSource}",
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Temp: ${batteryInfo.temperatureCelsius}°C",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = if (batteryInfo.temperatureCelsius > 42f) StatusRed else TextPrimary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        )
-                        Text(
-                            text = "Voltage: ${batteryInfo.voltageMv} mV",
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
-                        )
-                        Text(
-                            text = "Health: ${batteryInfo.health}",
-                            style = MaterialTheme.typography.bodySmall.copy(color = StatusGreen)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-                LinearProgressIndicator(
-                    progress = { (batteryInfo.level.coerceIn(0, 100) / 100f) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                    color = if (batteryInfo.level > 20) CyanAccent else StatusRed,
-                    trackColor = SurfaceElevated
-                )
-            }
-        }
-
-        // TOOL 2: RAM & MEMORY INSPECTOR
-        item {
-            ToolCardContainer(
-                title = "RAM & MEMORY USAGE",
-                subtitle = "ActivityManager.MemoryInfo API",
-                icon = Icons.Default.Memory,
-                onRefresh = {
-                    memoryInfo = DeviceInfoProvider.getMemoryInfo(context)
-                    Toast.makeText(context, "Memory stats refreshed", Toast.LENGTH_SHORT).show()
-                }
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "${memoryInfo.usedPercent}% Used",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = if (memoryInfo.usedPercent > 85) StatusRed else TextPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Text(
-                            text = "${memoryInfo.usedRamMb} MB used of ${memoryInfo.totalRamMb} MB",
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Free: ${memoryInfo.availableRamMb} MB",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = CyanGlow,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Text(
-                            text = if (memoryInfo.isLowMemory) "Low Memory: YES" else "Memory State: Optimal",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = if (memoryInfo.isLowMemory) StatusRed else StatusGreen
-                            )
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { (memoryInfo.usedPercent / 100f).coerceIn(0f, 1f) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                    color = if (memoryInfo.usedPercent > 85) StatusRed else CyanAccent,
-                    trackColor = SurfaceElevated
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedButton(
-                    onClick = {
-                        val before = memoryInfo.availableRamMb
-                        System.gc()
-                        memoryInfo = DeviceInfoProvider.getMemoryInfo(context)
-                        val freed = (memoryInfo.availableRamMb - before).coerceAtLeast(0)
-                        Toast.makeText(context, "GC triggered. Memory inspected ($freed MB reclaimed)", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(0.8.dp, CardBorder)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = null,
-                        tint = CyanAccent,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Trigger System Garbage Collection Hint",
-                        color = TextPrimary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
+                        text = "DPI, Resolution, DNS, Crosshair & Render Engine",
+                        color = Color(0xFF8E8E98),
+                        fontSize = 11.sp
                     )
                 }
+            },
+            navigationIcon = {
+                IconButton(onClick = { onNavigateToPage(0) }) {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Home",
+                        tint = accentColor
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0A0A0C))
+        )
+
+        // Navigation Jump Bar (Smooth transition across the 4 main pages)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = { onNavigateToPage(1) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+            ) {
+                Icon(Icons.Default.SportsEsports, contentDescription = null, tint = accentColor, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("← Game", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+
+            OutlinedButton(
+                onClick = { onNavigateToPage(3) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+            ) {
+                Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFFA78BFA), modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Settings →", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             }
         }
 
-        // TOOL 3: INTERNAL STORAGE ANALYZER
-        item {
-            ToolCardContainer(
-                title = "INTERNAL STORAGE",
-                subtitle = "StatFs Partition Query",
-                icon = Icons.Default.SdStorage,
-                onRefresh = {
-                    storageInfo = DeviceInfoProvider.getStorageInfo()
-                    Toast.makeText(context, "Storage calculated", Toast.LENGTH_SHORT).show()
-                }
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "${storageInfo.usedStorageGb} GB / ${storageInfo.totalStorageGb} GB",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Text(
-                            text = "${storageInfo.usedPercent}% Capacity Occupied",
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                        )
-                    }
+        Spacer(modifier = Modifier.height(10.dp))
 
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Free: ${storageInfo.freeStorageGb} GB",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = StatusGreen,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
-                }
+        // Segmented Sub-Category Tabs
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            val tabs = listOf(
+                "DPI & Res" to Icons.Default.DisplaySettings,
+                "DNS" to Icons.Default.Dns,
+                "Crosshair & HUD" to Icons.Default.Layers,
+                "Render" to Icons.Default.Speed
+            )
 
-                Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { (storageInfo.usedPercent / 100f).coerceIn(0f, 1f) },
+            tabs.forEachIndexed { idx, (label, icon) ->
+                val isSel = selectedTab == idx
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                    color = CyanAccent,
-                    trackColor = SurfaceElevated
-                )
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isSel) Color(0xFFFFB300).copy(alpha = 0.2f) else Color(0xFF13151D))
+                        .border(0.8.dp, if (isSel) Color(0xFFFFB300) else Color(0xFF222533), RoundedCornerShape(12.dp))
+                        .clickable { selectedTab = idx }
+                        .padding(vertical = 9.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = if (isSel) Color(0xFFFFB300) else Color(0xFF8E8E98),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = label,
+                            color = if (isSel) Color(0xFFFFB300) else Color(0xFF8E8E98),
+                            fontSize = 10.sp,
+                            fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium
+                        )
+                    }
+                }
             }
         }
 
-        // TOOL 4: NETWORK DIAGNOSTIC & PING TEST
-        item {
-            ToolCardContainer(
-                title = "NETWORK & PING DIAGNOSTIC",
-                subtitle = "ConnectivityManager & Socket Latency",
-                icon = Icons.Default.NetworkCheck,
-                onRefresh = {
-                    networkInfo = DeviceInfoProvider.getNetworkDiagnostic(context)
-                    Toast.makeText(context, "Network diagnostic refreshed", Toast.LENGTH_SHORT).show()
-                }
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            text = "Type: ${networkInfo.networkType}",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = TextPrimary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        )
-                        Text(
-                            text = if (networkInfo.isConnected) "Status: Connected" else "Status: Disconnected",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = if (networkInfo.isConnected) StatusGreen else StatusRed
-                            )
-                        )
-                    }
+        Spacer(modifier = Modifier.height(12.dp))
 
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Down: ~${networkInfo.linkDownSpeedMbps} Mbps",
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                        )
-                        Text(
-                            text = if (networkInfo.isMetered) "Metered Connection" else "Unmetered (High Bandwidth)",
-                            style = MaterialTheme.typography.labelSmall.copy(color = TextMuted)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = {
-                            if (!isPinging) {
-                                isPinging = true
-                                pingResultMs = null
-                                scope.launch {
-                                    val latency = withContext(Dispatchers.IO) {
-                                        DeviceInfoProvider.pingHost("8.8.8.8", 3000)
-                                    }
-                                    pingResultMs = latency
-                                    isPinging = false
+        // TAB CONTENTS
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 20.dp)
+        ) {
+            when (selectedTab) {
+                0 -> {
+                    // TAB 0: DPI & RESOLUTION ENGINE
+                    ToolsCard {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFFFB300).copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.DisplaySettings, contentDescription = null, tint = Color(0xFFFFB300), modifier = Modifier.size(20.dp))
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text("DPI & Resolution Engine", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("Input manual, Import ZIP aman & Countdown 5s", color = Color(0xFF8E8E98), fontSize = 11.sp)
                                 }
                             }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = CyanAccent,
-                            contentColor = Color(0xFF001E2E)
-                        ),
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(42.dp)
-                            .testTag("btn_run_ping")
-                    ) {
-                        if (isPinging) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                color = Color(0xFF001E2E),
-                                strokeWidth = 2.dp
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Manual DPI Input
+                            Text("Input DPI Manual:", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            OutlinedTextField(
+                                value = manualDpiText,
+                                onValueChange = { manualDpiText = it.filter { ch -> ch.isDigit() } },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Contoh: 360, 420, 480", color = Color(0xFF6E7285), fontSize = 12.sp) },
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFFFFB300),
+                                    unfocusedBorderColor = Color(0xFF262A3B),
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(10.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Testing...", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // Manual Resolution Input
+                            Text("Input Resolusi Manual (Lebar x Tinggi):", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            OutlinedTextField(
+                                value = manualResolutionText,
+                                onValueChange = { manualResolutionText = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Contoh: 1080x2400", color = Color(0xFF6E7285), fontSize = 12.sp) },
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFFFFB300),
+                                    unfocusedBorderColor = Color(0xFF262A3B),
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(10.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Ping DNS (8.8.8.8)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // IMPORT ZIP BUTTON
+                            OutlinedButton(
+                                onClick = {
+                                    try {
+                                        zipPickerLauncher.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream"))
+                                    } catch (_: Exception) {
+                                        Toast.makeText(context, "Tidak dapat membuka pemilih file", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF10B981))
+                            ) {
+                                Icon(Icons.Default.FolderZip, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("IMPORT ZIP KONFIGURASI", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+
+                            if (importedZipInfo != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Konfigurasi ZIP Siap: DPI=${importedZipInfo?.dpi ?: "-"} • Res=${importedZipInfo?.resolution ?: "-"}",
+                                    color = Color(0xFF10B981),
+                                    fontSize = 11.sp,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
+
+                            if (zipErrorMessage != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Error ZIP: $zipErrorMessage",
+                                    color = Color(0xFFEF4444),
+                                    fontSize = 11.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Action Buttons (Apply with 5s countdown + Reset)
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(
+                                    onClick = {
+                                        scope.launch {
+                                            smoothnessManager.resetToDefault(context as? Activity)
+                                            manualDpiText = "420"
+                                            manualResolutionText = "1080x2400"
+                                            Toast.makeText(context, "DPI & Resolusi direset ke default sistem", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
+                                ) {
+                                    Icon(Icons.Default.RestartAlt, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Reset Default", fontSize = 11.sp)
+                                }
+
+                                Button(
+                                    onClick = {
+                                        // Start real 5s countdown dialog with Cancel button
+                                        countdownSeconds = 5
+                                        showCountdownDialog = true
+                                        countdownJob?.cancel()
+                                        countdownJob = scope.launch {
+                                            for (i in 5 downTo 1) {
+                                                countdownSeconds = i
+                                                delay(1000)
+                                            }
+                                            showCountdownDialog = false
+                                            // Apply via Shizuku / Shell / Settings
+                                            val dpiVal = manualDpiText.toIntOrNull() ?: 420
+                                            val config = com.example.data.SmoothnessConfig(
+                                                mode = "BALANCED",
+                                                targetRefreshRate = 60,
+                                                touchProfile = "STANDARD",
+                                                hapticIntensity = "MEDIUM",
+                                                dpiPreset = "CUSTOM",
+                                                customDpi = dpiVal,
+                                                customResolution = manualResolutionText,
+                                                minimalPostProcessing = false
+                                            )
+                                            val result = smoothnessManager.applyConfigurationOfficial(context as? Activity, config)
+                                            applyResult = result
+                                            showResultDialog = true
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB300))
+                                ) {
+                                    Text("APPLY (5s Timer)", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                }
+                            }
                         }
                     }
+                }
 
-                    Box(
-                        modifier = Modifier
-                            .weight(0.9f)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(SurfaceElevated)
-                            .border(0.6.dp, CardBorder, RoundedCornerShape(14.dp))
-                            .padding(horizontal = 10.dp, vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = when {
-                                isPinging -> "Measuring RTT..."
-                                pingResultMs == null -> "Ping not run"
-                                pingResultMs!! >= 0 -> "${pingResultMs} ms (OK)"
-                                else -> "Host Unreachable"
-                            },
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = when {
-                                    pingResultMs == null -> TextMuted
-                                    pingResultMs!! in 0..150 -> StatusGreen
-                                    pingResultMs!! > 150 -> StatusAmber
-                                    else -> StatusRed
-                                },
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp
+                1 -> {
+                    // TAB 1: DNS KUSTOM
+                    ToolsCard {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF38BDF8).copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Dns, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(20.dp))
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text("DNS Kustom Gaming", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("Input manual, preset & tes ping jaringan nyata", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Text("Alamat DNS Provider:", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            OutlinedTextField(
+                                value = dnsInput,
+                                onValueChange = { dnsInput = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Contoh: 1dot1dot1dot1.cloudflare-dns.com", color = Color(0xFF6E7285), fontSize = 11.sp) },
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFF38BDF8),
+                                    unfocusedBorderColor = Color(0xFF262A3B),
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(10.dp)
                             )
-                        )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // Presets
+                            Text("Preset DNS Populer:", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            val presets = listOf(
+                                "Cloudflare" to "1dot1dot1dot1.cloudflare-dns.com",
+                                "Google DNS" to "dns.google",
+                                "AdGuard" to "dns.adguard.com"
+                            )
+
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                presets.forEach { (label, host) ->
+                                    val isSel = dnsInput == host
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (isSel) Color(0xFF38BDF8).copy(alpha = 0.2f) else Color(0xFF171A24))
+                                            .border(0.8.dp, if (isSel) Color(0xFF38BDF8) else Color(0xFF262A3B), RoundedCornerShape(8.dp))
+                                            .clickable { dnsInput = host }
+                                            .padding(vertical = 8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(label, color = if (isSel) Color(0xFF38BDF8) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Action buttons: Ping test & Apply
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedButton(
+                                    onClick = {
+                                        isPingingDns = true
+                                        dnsPingResult = null
+                                        scope.launch {
+                                            val res = withContext(Dispatchers.IO) {
+                                                try {
+                                                    val hostToPing = if (dnsInput.contains(".")) dnsInput.trim() else "1.1.1.1"
+                                                    val start = System.currentTimeMillis()
+                                                    val addr = InetAddress.getByName(hostToPing)
+                                                    val reachable = addr.isReachable(3000)
+                                                    val elapsed = System.currentTimeMillis() - start
+                                                    if (reachable) "Sukses: ${elapsed}ms (${addr.hostAddress})"
+                                                    else "DNS dapat di-resolve: ${addr.hostAddress} (${elapsed}ms)"
+                                                } catch (e: Exception) {
+                                                    "Gagal ping: ${e.localizedMessage}"
+                                                }
+                                            }
+                                            isPingingDns = false
+                                            dnsPingResult = res
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF38BDF8))
+                                ) {
+                                    if (isPingingDns) {
+                                        CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = Color(0xFF38BDF8))
+                                    } else {
+                                        Text("Tes Ping DNS", fontSize = 11.sp)
+                                    }
+                                }
+
+                                Button(
+                                    onClick = {
+                                        settingsManager.setCustomDns(dnsInput.trim())
+                                        Toast.makeText(context, "DNS Tersimpan: $dnsInput", Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38BDF8))
+                                ) {
+                                    Text("Simpan DNS", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                }
+                            }
+
+                            if (dnsPingResult != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Hasil Ping: $dnsPingResult",
+                                    color = if (dnsPingResult?.startsWith("Gagal") == true) Color(0xFFEF4444) else Color(0xFF10B981),
+                                    fontSize = 11.sp,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        // TOOL 5: HARDWARE SENSORS SCANNER
-        item {
-            ToolCardContainer(
-                title = "HARDWARE SENSORS SCANNER",
-                subtitle = "SensorManager Query",
-                icon = Icons.Default.Sensors,
-                onRefresh = {
-                    sensorsList = DeviceInfoProvider.getDeviceSensors(context)
-                    Toast.makeText(context, "${sensorsList.size} sensors detected", Toast.LENGTH_SHORT).show()
-                }
-            ) {
-                Text(
-                    text = "Total Hardware Sensors Detected: ${sensorsList.size}",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = CyanGlow,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                if (sensorsList.isEmpty()) {
-                    Text(
-                        text = "No physical sensors exposed in this hardware environment.",
-                        style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
-                    )
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        sensorsList.take(6).forEach { sensor ->
+                2 -> {
+                    // TAB 2: CROSSHAIR RETICLE & GAMING HUD OVERLAY
+                    ToolsCard {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            // Crosshair Section
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(SurfaceElevated)
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = sensor.name,
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = TextPrimary,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 12.sp
-                                        ),
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = "${sensor.vendor} • Power: ${sensor.power} mA",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            color = TextMuted,
-                                            fontSize = 10.sp
-                                        )
-                                    )
+                                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFFF2A2A).copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.Speed, contentDescription = null, tint = Color(0xFFFF2A2A), modifier = Modifier.size(20.dp))
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text("Crosshair Aim Reticle", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                        Text("Titik bidik presisi permanen", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                                    }
                                 }
+
+                                Switch(
+                                    checked = isCrosshairRunning,
+                                    onCheckedChange = { enable ->
+                                        if (enable) {
+                                            if (!Settings.canDrawOverlays(context)) {
+                                                Toast.makeText(context, "Izin Overlay Diperlukan", Toast.LENGTH_SHORT).show()
+                                                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")).apply {
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                }
+                                                context.startActivity(intent)
+                                            } else {
+                                                settingsManager.setCrosshairEnabled(true)
+                                                CrosshairService.start(context)
+                                            }
+                                        } else {
+                                            settingsManager.setCrosshairEnabled(false)
+                                            CrosshairService.stop(context)
+                                        }
+                                    },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFFFF2A2A))
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Reticle Preview Canvas Box
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color(0xFF0C0E14))
+                                    .border(0.8.dp, Color(0xFF1E2232), RoundedCornerShape(12.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Canvas(modifier = Modifier.size(80.dp)) {
+                                    val c = center
+                                    val effColor = crosshairColor.copy(alpha = crosshairOpacity)
+                                    val sizePx = (crosshairSize * density).coerceAtLeast(14f)
+                                    val half = sizePx / 2f
+
+                                    when (crosshairStyle) {
+                                        "DOT" -> drawCircle(color = effColor, radius = half.coerceIn(4f, 18f), center = c)
+                                        "CIRCLE_DOT" -> {
+                                            drawCircle(color = effColor, radius = half, center = c, style = Stroke(width = 2.5f))
+                                            drawCircle(color = effColor, radius = 3.5f, center = c)
+                                        }
+                                        "T_SHAPE" -> {
+                                            drawLine(effColor, Offset(c.x, c.y - half), Offset(c.x, c.y + 4f), strokeWidth = 3f)
+                                            drawLine(effColor, Offset(c.x - half, c.y), Offset(c.x + half, c.y), strokeWidth = 3f)
+                                        }
+                                        "SNIPER" -> {
+                                            drawCircle(effColor, half, c, style = Stroke(2f))
+                                            drawLine(effColor, Offset(c.x - half * 1.3f, c.y), Offset(c.x + half * 1.3f, c.y), 2f)
+                                            drawLine(effColor, Offset(c.x, c.y - half * 1.3f), Offset(c.x, c.y + half * 1.3f), 2f)
+                                            drawCircle(effColor, 3f, c)
+                                        }
+                                        else -> {
+                                            // Classic Cross
+                                            drawLine(effColor, Offset(c.x - half, c.y), Offset(c.x - 4f, c.y), 3f)
+                                            drawLine(effColor, Offset(c.x + 4f, c.y), Offset(c.x + half, c.y), 3f)
+                                            drawLine(effColor, Offset(c.x, c.y - half), Offset(c.x, c.y - 4f), 3f)
+                                            drawLine(effColor, Offset(c.x, c.y + 4f), Offset(c.x, c.y + half), 3f)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // Crosshair Styles
+                            val styles = listOf("CLASSIC", "DOT", "CIRCLE_DOT", "T_SHAPE", "SNIPER")
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                styles.forEach { st ->
+                                    val isSel = crosshairStyle == st
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (isSel) Color(0xFFFF2A2A).copy(alpha = 0.2f) else Color(0xFF171A24))
+                                            .border(0.8.dp, if (isSel) Color(0xFFFF2A2A) else Color(0xFF262A3B), RoundedCornerShape(8.dp))
+                                            .clickable { settingsManager.setCrosshairStyle(st) }
+                                            .padding(vertical = 6.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(st.replace("_", " "), color = if (isSel) Color(0xFFFF2A2A) else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider(color = Color(0xFF22242E), thickness = 0.6.dp)
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Gaming HUD Row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFFFB300).copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.SportsEsports, contentDescription = null, tint = Color(0xFFFFB300), modifier = Modifier.size(20.dp))
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text("Gaming HUD Telemetry", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                        Text("Floating monitor FPS, RAM, Temp & Baterai", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                                    }
+                                }
+
+                                Switch(
+                                    checked = isHudRunning,
+                                    onCheckedChange = { enable ->
+                                        if (enable) {
+                                            if (!Settings.canDrawOverlays(context)) {
+                                                Toast.makeText(context, "Izin Overlay Diperlukan", Toast.LENGTH_SHORT).show()
+                                                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")).apply {
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                }
+                                                context.startActivity(intent)
+                                            } else {
+                                                OverlayService.start(context)
+                                            }
+                                        } else {
+                                            OverlayService.stop(context)
+                                        }
+                                    },
+                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFFFFB300))
+                                )
+                            }
+                        }
+                    }
+                }
+
+                3 -> {
+                    // TAB 3: RENDER SELECTION
+                    ToolsCard {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(Color(0x2200D2FF))
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFA78BFA).copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = "Type ${sensor.type}",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            color = CyanAccent,
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    )
+                                    Icon(Icons.Default.Speed, contentDescription = null, tint = Color(0xFFA78BFA), modifier = Modifier.size(20.dp))
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text("Pilihan Backend Render", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("Deteksi dukungan driver grafis GPU perangkat", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            val vulkanDesc = DeviceInfoProvider.getVulkanInfo(context)
+                            val openGlDesc = DeviceInfoProvider.getOpenGlEsVersion(context)
+                            val hasVulkan = !vulkanDesc.contains("Not Supported", ignoreCase = true)
+
+                            val renderEngines = listOf(
+                                Triple("DEFAULT", "Default Driver OS", "Driver rendering default yang ditentukan sistem"),
+                                Triple("VULKAN", "Vulkan API", vulkanDesc),
+                                Triple("OPENGL_ES", "OpenGL ES", openGlDesc)
+                            )
+
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                renderEngines.forEach { (modeKey, title, desc) ->
+                                    val isSel = renderMode == modeKey
+                                    val isSupported = modeKey != "VULKAN" || hasVulkan
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isSel) Color(0xFFA78BFA).copy(alpha = 0.2f) else Color(0xFF171A24))
+                                            .border(0.8.dp, if (isSel) Color(0xFFA78BFA) else Color(0xFF262A3B), RoundedCornerShape(10.dp))
+                                            .clickable(enabled = isSupported) {
+                                                settingsManager.setRenderMode(modeKey)
+                                                Toast.makeText(context, "Render Mode: $title", Toast.LENGTH_SHORT).show()
+                                            }
+                                            .padding(12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(title, color = if (isSel) Color(0xFFA78BFA) else Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                                Text(desc, color = if (isSupported) Color(0xFF8E8E98) else Color(0xFFEF4444), fontSize = 10.sp)
+                                            }
+                                            if (isSel) {
+                                                Icon(Icons.Default.Check, contentDescription = null, tint = Color(0xFFA78BFA), modifier = Modifier.size(18.dp))
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
-
-                        if (sensorsList.size > 6) {
-                            Text(
-                                text = "+ ${sensorsList.size - 6} additional sensors operational on device",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = TextMuted,
-                                    fontSize = 10.sp
-                                )
-                            )
-                        }
                     }
                 }
             }
-        }
 
-        // TOOL 6: FLASHLIGHT / TORCH
-        item {
-            ToolCardContainer(
-                title = "FLASHLIGHT / TORCH CONTROLLER",
-                subtitle = "CameraManager.setTorchMode API",
-                icon = Icons.Default.FlashlightOn
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = if (hasFlashlight) {
-                                if (isFlashlightOn) "Torch Active (ON)" else "Torch Standby (OFF)"
-                            } else {
-                                "Hardware Flash Unavailable"
-                            },
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = if (isFlashlightOn) CyanGlow else TextPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Text(
-                            text = if (hasFlashlight) "Toggles device camera LED flash" else "Device has no rear camera flash unit",
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                        )
-                    }
-
-                    Button(
-                        onClick = { toggleFlashlight() },
-                        enabled = hasFlashlight,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isFlashlightOn) Color(0xFFEF4444) else CyanAccent,
-                            contentColor = if (isFlashlightOn) Color.White else Color(0xFF001E2E)
-                        ),
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.testTag("btn_toggle_flashlight")
-                    ) {
-                        Text(
-                            text = if (isFlashlightOn) "TURN OFF" else "TURN ON",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
-        }
-
-        // TOOL 7: HAPTIC ENGINE TESTER
-        item {
-            ToolCardContainer(
-                title = "HAPTIC MOTOR TESTER",
-                subtitle = "Vibrator Service Waveforms",
-                icon = Icons.Default.Vibration
-            ) {
-                Text(
-                    text = "Test physical device vibration actuator with distinct tactile effects:",
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = { vibrateDevice(1) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.8.dp, CardBorder)
-                    ) {
-                        Text("Click (50ms)", fontSize = 11.sp, color = TextPrimary)
-                    }
-
-                    OutlinedButton(
-                        onClick = { vibrateDevice(2) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.8.dp, CardBorder)
-                    ) {
-                        Text("Double Pulse", fontSize = 11.sp, color = CyanAccent)
-                    }
-
-                    OutlinedButton(
-                        onClick = { vibrateDevice(3) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.8.dp, CardBorder)
-                    ) {
-                        Text("Alarm Wave", fontSize = 11.sp, color = Color(0xFFFBBF24))
-                    }
-                }
-            }
-        }
-
-        // TOOL 8: SCREEN TEST PATTERN
-        item {
-            ToolCardContainer(
-                title = "SCREEN & DEAD PIXEL TESTER",
-                subtitle = "Display Panel Color Calibration",
-                icon = Icons.Default.Visibility
-            ) {
-                Text(
-                    text = "Launches full-screen solid RGB, White and Black frames to visually inspect display panel uniformity and dead pixels.",
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Button(
-                    onClick = {
-                        currentColorIndex = 0
-                        isScreenTestOpen = true
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SurfaceElevated,
-                        contentColor = CyanAccent
-                    ),
-                    shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(0.8.dp, CyanAccent.copy(alpha = 0.5f)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(44.dp)
-                        .testTag("btn_screen_test")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Visibility,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Start Fullscreen Display Test", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                }
-            }
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(96.dp))
+            Spacer(modifier = Modifier.height(110.dp))
         }
     }
 
-    // Fullscreen Screen Pixel Test Dialog
-    if (isScreenTestOpen) {
+    // 5-SECOND COUNTDOWN DIALOG WITH CANCEL BUTTON
+    if (showCountdownDialog) {
         Dialog(
-            onDismissRequest = { isScreenTestOpen = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false)
+            onDismissRequest = {
+                countdownJob?.cancel()
+                showCountdownDialog = false
+            },
+            properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = false)
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(testColors[currentColorIndex])
-                    .clickable {
-                        if (currentColorIndex < testColors.size - 1) {
-                            currentColorIndex++
-                        } else {
-                            isScreenTestOpen = false
-                            Toast.makeText(context, "Display test complete", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                contentAlignment = Alignment.BottomCenter
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color(0xFF13151D))
+                    .border(1.2.dp, Color(0xFFFFB300), RoundedCornerShape(18.dp))
+                    .padding(22.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .padding(bottom = 40.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xAA000000))
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFFFB300), modifier = Modifier.size(36.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text("Menerapkan Konfigurasi Layar", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Tap to next color (${currentColorIndex + 1}/${testColors.size}) • Double tap outside to exit",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
+                        text = "Konfigurasi akan diterapkan dalam $countdownSeconds detik...",
+                        color = Color(0xFF8E8E98),
+                        fontSize = 12.sp
                     )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = "$countdownSeconds",
+                        color = Color(0xFFFFB300),
+                        fontSize = 38.sp,
+                        fontWeight = FontWeight.Black,
+                        fontFamily = FontFamily.Monospace
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            countdownJob?.cancel()
+                            showCountdownDialog = false
+                            Toast.makeText(context, "Dibatalkan oleh pengguna", Toast.LENGTH_SHORT).show()
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
+                    ) {
+                        Text("BATALKAN SEKARANG", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    }
                 }
             }
         }
+    }
+
+    // RESULT DIALOG
+    if (showResultDialog && applyResult != null) {
+        val res = applyResult!!
+        AlertDialog(
+            onDismissRequest = { showResultDialog = false },
+            title = {
+                val isOk = res.windowApplied || res.globalOsDpiApplied
+                Text(
+                    text = if (isOk) "Konfigurasi Berhasil Diproses" else "Izin / Dukungan Sistem Diperlukan",
+                    color = if (isOk) Color(0xFF10B981) else Color(0xFFEF4444),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(res.message + if (res.reasonExplanation.isNotBlank()) "\n\n${res.reasonExplanation}" else "", color = Color.White, fontSize = 12.sp)
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showResultDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB300))
+                ) {
+                    Text("OK", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = Color(0xFF13151D)
+        )
     }
 }
 
 @Composable
-private fun ToolCardContainer(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    onRefresh: (() -> Unit)? = null,
-    content: @Composable () -> Unit
-) {
+private fun ToolsCard(content: @Composable () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .clip(RoundedCornerShape(22.dp))
-            .background(SurfaceCard)
-            .border(0.8.dp, CardBorder, RoundedCornerShape(22.dp))
-            .padding(16.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color(0xFF13151D))
+            .border(0.8.dp, Color(0xFF222533), RoundedCornerShape(18.dp))
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(CyanAccent.copy(alpha = 0.12f))
-                            .border(0.6.dp, CyanAccent.copy(alpha = 0.3f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = CyanAccent,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                        )
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = TextMuted,
-                                fontSize = 10.sp
-                            )
-                        )
-                    }
-                }
-
-                if (onRefresh != null) {
-                    IconButton(
-                        onClick = onRefresh,
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            tint = CyanAccent,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = CardBorderSubtle, thickness = 0.6.dp)
-            Spacer(modifier = Modifier.height(12.dp))
-
-            content()
-        }
+        content()
     }
 }

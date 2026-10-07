@@ -89,6 +89,9 @@ import kotlinx.coroutines.launch
 import kotlin.math.min
 import kotlin.math.roundToInt
 
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.SportsEsports
+
 private val GoldAccent = Color(0xFFFFB300)
 private val CyanAccent = Color(0xFF00E5FF)
 private val GreenAccent = Color(0xFF10B981)
@@ -99,7 +102,8 @@ private val TextMuted = Color(0xFF94A3B8)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameSmoothnessScreen(
-    onBack: () -> Unit,
+    onBack: () -> Unit = {},
+    onNavigateToPage: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -235,6 +239,36 @@ fun GameSmoothnessScreen(
                 containerColor = Color(0xFF0D0F17)
             )
         )
+
+        // Horizontal Quick Jump Bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = { onNavigateToPage(0) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+            ) {
+                Icon(Icons.Default.Home, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("← Beranda", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+
+            OutlinedButton(
+                onClick = { onNavigateToPage(2) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+            ) {
+                Icon(Icons.Default.SportsEsports, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Game Space →", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
 
         // MAIN CONTENT
         Column(

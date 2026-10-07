@@ -36,9 +36,13 @@ class MainActivity : FragmentActivity() {
 
         setContent {
             val isDarkMode by settingsManager.isDarkMode.collectAsState()
+            val accentColorLong by settingsManager.accentColor.collectAsState()
             val isAuthenticated by authManager.isAuthenticated.collectAsState()
 
-            MyApplicationTheme(darkTheme = isDarkMode) {
+            MyApplicationTheme(
+                darkTheme = isDarkMode,
+                accentColor = androidx.compose.ui.graphics.Color(accentColorLong)
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = DarkBackground

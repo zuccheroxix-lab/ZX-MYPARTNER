@@ -19,6 +19,7 @@ object Config {
     const val DEVELOPER_ROLE = "DEVELOPER"
     const val DEVELOPER_ID = "ZX-DEV-001"
     const val DEVELOPER_FULL = "ZUCCHERO XANN • DEVELOPER"
+    const val DEVELOPER_EMAIL = "candrajouva03@gmail.com"
 
     // Official Contacts
     const val WA_1 = "https://wa.me/6287861072798"

@@ -494,7 +494,7 @@ fun GamingHudPanel(
                         )
 
                         Text(
-                            text = "REAL-TIME FPS",
+                            text = "FPS MONITOR",
                             color = GoldAccent,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,

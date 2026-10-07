@@ -1,5 +1,13 @@
 package com.example.ui.screens
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import android.view.WindowManager
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,19 +27,27 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ElectricBolt
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SportsEsports
-import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,45 +56,55 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.Config
 import com.example.data.DeviceInfo
+import com.example.data.DeviceInfoProvider
+import com.example.data.SettingsManager
+import com.example.service.CrosshairService
+import com.example.service.OverlayService
 import com.example.ui.components.BannerCard
 import com.example.ui.components.DashboardHeader
-import com.example.ui.components.DeveloperProfileCard
 import com.example.ui.components.DeveloperProfileSheet
-import com.example.ui.components.GamingHudLauncherCard
-import com.example.ui.components.InfoSystemCard
-import com.example.ui.components.OfficialContactsCard
-import com.example.ui.components.PartnersSectionCard
-import com.example.ui.components.ShizukuStatusBanner
-import com.example.ui.components.VersionCards
-
-private val GoldAccent = Color(0xFFFFB300)
-private val DarkCardBg = Color(0xFF141722)
-private val BorderColor = Color(0xFF262C3E)
-private val TextMuted = Color(0xFF94A3B8)
+import com.example.ui.components.isShizukuInstalled
+import com.example.ui.theme.LocalAccentColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     deviceInfo: DeviceInfo,
     onRefreshDeviceInfo: () -> Unit,
-    onOpenPerformance: () -> Unit = {},
-    onOpenGamingHud: () -> Unit = {},
-    onOpenGameProfile: () -> Unit = {},
-    onOpenSystemStatus: () -> Unit = {},
-    onOpenClearCache: () -> Unit = {},
-    onOpenGameSmoothness: () -> Unit = {},
+    onNavigateToPage: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val accentColor = LocalAccentColor.current
+
+    val settingsManager = remember { SettingsManager(context) }
+    val performanceMode by settingsManager.performanceMode.collectAsState()
+    val isHudRunning by OverlayService.isServiceRunning.collectAsState()
+    val isCrosshairRunning by CrosshairService.isServiceRunning.collectAsState()
+
+    var memoryInfo by remember { mutableStateOf(DeviceInfoProvider.getMemoryInfo(context)) }
+    var batteryInfo by remember { mutableStateOf(DeviceInfoProvider.getBatteryInfo(context)) }
     var showProfileSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    fun refreshStats() {
+        onRefreshDeviceInfo()
+        memoryInfo = DeviceInfoProvider.getMemoryInfo(context)
+        batteryInfo = DeviceInfoProvider.getBatteryInfo(context)
+    }
+
+    LaunchedEffect(Unit) {
+        refreshStats()
+    }
 
     Column(
         modifier = modifier
@@ -86,62 +112,394 @@ fun HomeScreen(
             .verticalScroll(scrollState)
             .testTag("home_screen_content")
     ) {
-        // 1. HEADER (Title: Dashboard, Subtitle: Dashboard Menu ZX, Dev: ZUCCHERO XANN)
+        // 1. Header (Clean & Professional)
         DashboardHeader(
-            title = "Dashboard",
-            subtitle = Config.APP_SUBTITLE,
+            title = "DYNIMETIZE ZX",
+            subtitle = "Gaming Performance & Control Center",
             developerName = Config.DEVELOPER_NAME,
             onDevClick = { showProfileSheet = true }
         )
 
-        // 2. BANNER
-        BannerCard()
-
-        // 2.2 NEW: ZX ENGINE 6 CORE MENUS SECTION
-        ZxEngineMenusSection(
-            onOpenPerformance = onOpenPerformance,
-            onOpenGamingHud = onOpenGamingHud,
-            onOpenGameProfile = onOpenGameProfile,
-            onOpenSystemStatus = onOpenSystemStatus,
-            onOpenClearCache = onOpenClearCache,
-            onOpenGameSmoothness = onOpenGameSmoothness
+        // 2. Original Anime / Visual Asset Banner (Retaining existing photo/asset)
+        BannerCard(
+            onBannerClick = { showProfileSheet = true }
         )
 
-        // 2.5 FLOATING GAMING HUD OVERLAY LAUNCHER
-        GamingHudLauncherCard()
+        Spacer(modifier = Modifier.height(6.dp))
 
-        // 3. VERSION CARDS (Version APP & Developer APP)
-        VersionCards(
-            appVersion = deviceInfo.appVersion,
-            developerName = Config.DEVELOPER_NAME,
-            onDeveloperClick = { showProfileSheet = true }
-        )
+        // 3. Main 3 Navigation Shortcuts: GAME, TOOLS, SETTINGS
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            OutlinedButton(
+                onClick = { onNavigateToPage(1) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+            ) {
+                Icon(Icons.Default.SportsEsports, contentDescription = null, tint = accentColor, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("GAME →", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
 
-        // 4. INFORMATION SYSTEM
-        InfoSystemCard(
-            deviceInfo = deviceInfo,
-            onRefresh = onRefreshDeviceInfo
-        )
+            OutlinedButton(
+                onClick = { onNavigateToPage(2) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+            ) {
+                Icon(Icons.Default.Build, contentDescription = null, tint = Color(0xFFFFB300), modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("TOOLS →", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
 
-        // 5. DEVELOPER PROFILE SECTION (DYNIMETIZE ZX, ZUCCHERO XANN, ZX-DEV-001, [ COPY ])
-        DeveloperProfileCard(
-            onOpenFullProfile = { showProfileSheet = true }
-        )
+            OutlinedButton(
+                onClick = { onNavigateToPage(3) },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+            ) {
+                Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFFA78BFA), modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("SETTINGS →", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+        }
 
-        // 6. OFFICIAL CONTACTS & CHANNELS (NO WA 1, NO WA 2, WHATSAPP CHANNEL, SOCIABUZZ)
-        OfficialContactsCard()
+        Spacer(modifier = Modifier.height(10.dp))
 
-        // 7. PARTNERS DIRECTORY (LALZ, VAXXY with WhatsApp CONTACT buttons & IDs)
-        PartnersSectionCard()
+        // 4. Performance Mode Selector Card
+        HomeSectionCard {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEF4444).copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.ElectricBolt, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Mode Performa", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text("Alokasi daya sistem Android", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                        }
+                    }
 
-        // 8. SHIZUKU STATUS WARNING BANNER
-        ShizukuStatusBanner()
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                when (performanceMode) {
+                                    "PERFORMANCE" -> Color(0xFFEF4444).copy(alpha = 0.2f)
+                                    "BATTERY_SAVER" -> Color(0xFF10B981).copy(alpha = 0.2f)
+                                    else -> accentColor.copy(alpha = 0.2f)
+                                }
+                            )
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = performanceMode,
+                            color = when (performanceMode) {
+                                "PERFORMANCE" -> Color(0xFFEF4444)
+                                "BATTERY_SAVER" -> Color(0xFF10B981)
+                                else -> accentColor
+                            },
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
 
-        // Bottom spacing so floating nav bar does not overlap content
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Mode Buttons (Performance, Balanced, Eco Saver)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val modes = listOf(
+                        Triple("PERFORMANCE", "Performance", Color(0xFFEF4444)),
+                        Triple("BALANCED", "Balanced", Color(0xFF38BDF8)),
+                        Triple("BATTERY_SAVER", "Eco Saver", Color(0xFF10B981))
+                    )
+                    modes.forEach { (modeKey, label, color) ->
+                        val isSelected = performanceMode == modeKey
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) color.copy(alpha = 0.22f) else Color(0xFF171A24))
+                                .border(0.8.dp, if (isSelected) color else Color(0xFF262A3B), RoundedCornerShape(10.dp))
+                                .clickable {
+                                    settingsManager.setPerformanceMode(modeKey)
+                                    val act = context as? Activity
+                                    if (act != null) {
+                                        if (modeKey == "PERFORMANCE") {
+                                            act.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                                        } else {
+                                            act.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                                        }
+                                    }
+                                    Toast.makeText(context, "Mode: $label", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                color = if (isSelected) color else Color.White,
+                                fontSize = 11.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 5. Hardware Specifications Overview (Real Android System APIs)
+        HomeSectionCard {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(accentColor.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Memory, contentDescription = null, tint = accentColor, modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text("Status Hardware Perangkat", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text("Data resmi dari API sistem Android", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                        }
+                    }
+
+                    IconButton(onClick = { refreshStats() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = accentColor, modifier = Modifier.size(18.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 4-Grid Metrics
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HardwareMetricTile(
+                        label = "RAM Sistem",
+                        value = "${memoryInfo.availableRamMb} MB Bebas",
+                        sub = "Total: ${memoryInfo.totalRamMb} MB (${memoryInfo.usedPercent}% used)",
+                        color = accentColor,
+                        modifier = Modifier.weight(1f)
+                    )
+                    HardwareMetricTile(
+                        label = "Suhu & Baterai",
+                        value = "${batteryInfo.temperatureCelsius}°C",
+                        sub = "${batteryInfo.level}% • ${batteryInfo.health}",
+                        color = if (batteryInfo.temperatureCelsius > 42) Color(0xFFEF4444) else Color(0xFF10B981),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HardwareMetricTile(
+                        label = "Prosesor & SoC",
+                        value = Build.HARDWARE.ifEmpty { "ARM64" },
+                        sub = "${DeviceInfoProvider.getCpuCores()} Cores • ${deviceInfo.cpuAbi}",
+                        color = Color(0xFFA78BFA),
+                        modifier = Modifier.weight(1f)
+                    )
+                    val refreshRates = DeviceInfoProvider.getSupportedRefreshRates(context)
+                    HardwareMetricTile(
+                        label = "Refresh Rate Layar",
+                        value = "${refreshRates.lastOrNull() ?: 60}Hz",
+                        sub = "Didukung: ${refreshRates.joinToString("Hz, ")}Hz",
+                        color = Color(0xFF38BDF8),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 6. Floating Overlay Toggles (Gaming HUD & Crosshair)
+        HomeSectionCard {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "OVERLAY MENGAMBANG",
+                    color = Color(0xFF8E8E98),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.8.sp
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Gaming HUD Toggle Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFFB300).copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.SportsEsports, contentDescription = null, tint = Color(0xFFFFB300), modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text("Gaming HUD Telemetry", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text("Monitor terapung di atas game", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                        }
+                    }
+
+                    Switch(
+                        checked = isHudRunning,
+                        onCheckedChange = { enable ->
+                            if (enable) {
+                                if (!Settings.canDrawOverlays(context)) {
+                                    Toast.makeText(context, "Izin Tampilkan di Atas Aplikasi Diperlukan", Toast.LENGTH_SHORT).show()
+                                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    }
+                                    context.startActivity(intent)
+                                } else {
+                                    OverlayService.start(context)
+                                }
+                            } else {
+                                OverlayService.stop(context)
+                            }
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = accentColor)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+                Box(modifier = Modifier.fillMaxWidth().height(0.6.dp).background(Color(0xFF222533)))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Crosshair Toggle Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFF2A2A).copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Speed, contentDescription = null, tint = Color(0xFFFF2A2A), modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text("Crosshair Aim Reticle", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text("Titik bidik presisi permanen di layar", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                        }
+                    }
+
+                    Switch(
+                        checked = isCrosshairRunning,
+                        onCheckedChange = { enable ->
+                            if (enable) {
+                                if (!Settings.canDrawOverlays(context)) {
+                                    Toast.makeText(context, "Izin Tampilkan di Atas Aplikasi Diperlukan", Toast.LENGTH_SHORT).show()
+                                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    }
+                                    context.startActivity(intent)
+                                } else {
+                                    settingsManager.setCrosshairEnabled(true)
+                                    CrosshairService.start(context)
+                                }
+                            } else {
+                                settingsManager.setCrosshairEnabled(false)
+                                CrosshairService.stop(context)
+                            }
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFFFF2A2A))
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 7. Shizuku Status Overview
+        HomeSectionCard {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val installed = isShizukuInstalled(context)
+                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(if (installed) Color(0xFF10B981).copy(alpha = 0.15f) else Color(0xFFF97316).copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Security,
+                            contentDescription = null,
+                            tint = if (installed) Color(0xFF10B981) else Color(0xFFF97316),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text("Layanan Shizuku ADB", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        Text(
+                            text = if (installed) "Terpasang (Akses Shell Diizinkan)" else "Belum Terpasang (Akses Terbatas)",
+                            color = if (installed) Color(0xFF10B981) else Color(0xFFF97316),
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                TextButton(onClick = { onNavigateToPage(3) }) {
+                    Text("Pengaturan →", color = accentColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(110.dp))
     }
 
-    // Modal Bottom Sheet for Developer Profile & Contacts
     if (showProfileSheet) {
         DeveloperProfileSheet(
             onDismissRequest = { showProfileSheet = false },
@@ -151,151 +509,42 @@ fun HomeScreen(
 }
 
 @Composable
-private fun ZxEngineMenusSection(
-    onOpenPerformance: () -> Unit,
-    onOpenGamingHud: () -> Unit,
-    onOpenGameProfile: () -> Unit,
-    onOpenSystemStatus: () -> Unit,
-    onOpenClearCache: () -> Unit,
-    onOpenGameSmoothness: () -> Unit
+private fun HomeSectionCard(
+    content: @Composable () -> Unit
 ) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp)
+            .padding(horizontal = 20.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color(0xFF13151D))
+            .border(0.8.dp, Color(0xFF222533), RoundedCornerShape(18.dp))
     ) {
-        Text(
-            text = "ZX ENGINE CONTROL CENTER",
-            color = GoldAccent,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Row 1: PERFORMANCE & GAMING HUD
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            EngineMenuTile(
-                modifier = Modifier.weight(1f),
-                title = "PERFORMANCE",
-                subtitle = "Perf, Balanced, Saver",
-                icon = Icons.Default.ElectricBolt,
-                accentColor = Color(0xFFEF4444),
-                onClick = onOpenPerformance
-            )
-            EngineMenuTile(
-                modifier = Modifier.weight(1f),
-                title = "GAMING HUD",
-                subtitle = "FPS, RAM, Temp, Ping",
-                icon = Icons.Default.SportsEsports,
-                accentColor = GoldAccent,
-                onClick = onOpenGamingHud
-            )
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Row 2: GAME PROFILE & SYSTEM STATUS
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            EngineMenuTile(
-                modifier = Modifier.weight(1f),
-                title = "GAME PROFILE",
-                subtitle = "Per-game isolated settings",
-                icon = Icons.Default.Tune,
-                accentColor = Color(0xFF38BDF8),
-                onClick = onOpenGameProfile
-            )
-            EngineMenuTile(
-                modifier = Modifier.weight(1f),
-                title = "SYSTEM STATUS",
-                subtitle = "OS, RAM, Storage, Sensor",
-                icon = Icons.Default.Info,
-                accentColor = Color(0xFFA78BFA),
-                onClick = onOpenSystemStatus
-            )
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Row 3: CLEAR CACHE & GAME SMOOTHNESS
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            EngineMenuTile(
-                modifier = Modifier.weight(1f),
-                title = "CLEAR CACHE",
-                subtitle = "Pembersihan aman & terukur",
-                icon = Icons.Default.CleaningServices,
-                accentColor = Color(0xFF10B981),
-                onClick = onOpenClearCache
-            )
-            EngineMenuTile(
-                modifier = Modifier.weight(1f),
-                title = "GAME SMOOTHNESS",
-                subtitle = "Smooth, 120Hz, Touch & DPI",
-                icon = Icons.Default.Speed,
-                accentColor = Color(0xFF00E5FF),
-                onClick = onOpenGameSmoothness
-            )
-        }
+        content()
     }
 }
 
 @Composable
-private fun EngineMenuTile(
-    modifier: Modifier = Modifier,
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    accentColor: Color,
-    onClick: () -> Unit
+private fun HardwareMetricTile(
+    label: String,
+    value: String,
+    sub: String,
+    color: Color,
+    modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(DarkCardBg)
-            .border(0.8.dp, BorderColor, RoundedCornerShape(14.dp))
-            .clickable { onClick() }
-            .padding(14.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF171A24))
+            .border(0.6.dp, Color(0xFF262A3B), RoundedCornerShape(12.dp))
+            .padding(10.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(accentColor.copy(alpha = 0.15f))
-                    .border(1.dp, accentColor.copy(alpha = 0.4f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = accentColor,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = title,
-                color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
-            )
+        Column {
+            Text(label, color = Color(0xFF8E8E98), fontSize = 10.sp, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                color = TextMuted,
-                fontSize = 10.5.sp,
-                maxLines = 1
-            )
+            Text(value, color = color, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(sub, color = Color(0xFF6E7285), fontSize = 9.sp, maxLines = 1)
         }
     }
 }

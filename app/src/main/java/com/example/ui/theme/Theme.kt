@@ -1,11 +1,14 @@
 package com.example.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+
+val LocalAccentColor = staticCompositionLocalOf { CyanAccent }
 
 private val ZXDarkColorScheme = darkColorScheme(
     primary = CyanAccent,
@@ -47,13 +50,20 @@ private val ZXLightColorScheme = lightColorScheme(
 @Composable
 fun MyApplicationTheme(
     darkTheme: Boolean = true,
+    accentColor: Color = CyanAccent,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) ZXDarkColorScheme else ZXLightColorScheme
-
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+    val baseScheme = if (darkTheme) ZXDarkColorScheme else ZXLightColorScheme
+    val colorScheme = baseScheme.copy(
+        primary = accentColor,
+        tertiary = accentColor
     )
+
+    CompositionLocalProvider(LocalAccentColor provides accentColor) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
