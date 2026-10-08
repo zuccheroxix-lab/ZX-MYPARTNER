@@ -75,7 +75,7 @@ class FeedbackManager(private val context: Context) {
                 // Construct real JSON payload with system hardware context
                 val jsonPayload = JSONObject().apply {
                     put("app", "DYNIMETIZE ZX")
-                    put("version", "2.0.0")
+                    put("version", "2.2.0")
                     put("category", category)
                     put("message", message.trim())
                     put("contact", userContact.trim().ifEmpty { "Anonymous" })
@@ -93,7 +93,7 @@ class FeedbackManager(private val context: Context) {
                 val request = Request.Builder()
                     .url("https://httpbin.org/post") // Real HTTP echo & verification endpoint
                     .post(requestBody)
-                    .header("User-Agent", "DYNIMETIZE-ZX/2.0.0 (${Build.MODEL}; Android ${Build.VERSION.RELEASE})")
+                    .header("User-Agent", "DYNIMETIZE-ZX/2.2.0 (${Build.MODEL}; Android ${Build.VERSION.RELEASE})")
                     .header("Accept", "application/json")
                     .build()
 

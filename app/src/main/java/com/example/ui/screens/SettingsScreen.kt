@@ -82,6 +82,11 @@ import com.example.data.Config
 import com.example.data.FeedbackManager
 import com.example.data.FeedbackSubmissionState
 import com.example.data.SettingsManager
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.OpenInNew
+import com.example.ui.components.LinkHandler
 import com.example.ui.components.isShizukuInstalled
 import com.example.ui.theme.LocalAccentColor
 import kotlinx.coroutines.launch
@@ -103,7 +108,7 @@ fun SettingsScreen(
     isDarkMode: Boolean = true,
     animationsEnabled: Boolean = true,
     hapticsEnabled: Boolean = true,
-    appVersion: String = "2.0.0",
+    appVersion: String = Config.DEFAULT_VERSION_NAME,
     onNavigateToPage: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -628,7 +633,134 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // CARD 5: PENGATURAN & INFO APLIKASI (Preserving asset logo & identity)
+            // CARD 5: UPDATE & DOWNLOAD APK TERBARU (Official Release)
+            SettingsCard {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFFB300).copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Download,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFFB300),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "Update & Release APK",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.5.sp
+                                )
+                                Text(
+                                    text = "Versi Terbaru: v${Config.DEFAULT_VERSION_NAME.replace(" (release)", "")} (Build ${Config.VERSION_CODE})",
+                                    color = Color(0xFF10B981),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF10B981).copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "READY",
+                                color = Color(0xFF10B981),
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "File instalasi resmi ${Config.APK_FILENAME}. Berisi update 4 navigasi utama (Home, Game, Tools, Settings), feedback nyata, dan zero gimmick.",
+                        color = Color(0xFF8E8E98),
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Button(
+                        onClick = {
+                            LinkHandler.openUrl(context, Config.APK_DOWNLOAD_URL)
+                            Toast.makeText(context, "Membuka download ${Config.APK_FILENAME}...", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("btn_download_latest_apk"),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFB300),
+                            contentColor = Color(0xFF0A0B0F)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("DOWNLOAD APK TERBARU", fontWeight = FontWeight.ExtraBold, fontSize = 12.5.sp)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                LinkHandler.openUrl(context, Config.GITHUB_RELEASES_URL)
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("btn_open_github_release"),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(0.8.dp, Color(0xFF2E3244))
+                        ) {
+                            Icon(Icons.Default.OpenInNew, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("GitHub Release", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                LinkHandler.copyToClipboard(context, "APK Download URL", Config.APK_DOWNLOAD_URL) {
+                                    Toast.makeText(context, "Link APK berhasil disalin ke clipboard!", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("btn_copy_download_link"),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(0.8.dp, Color(0xFF2E3244))
+                        ) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Salin Link", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // CARD 6: PENGATURAN & INFO APLIKASI (Preserving asset logo & identity)
             SettingsCard {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

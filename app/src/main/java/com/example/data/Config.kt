@@ -9,10 +9,16 @@ object Config {
     // App Brand Identity
     const val APP_NAME = "DYNIMETIZE ZX"
     const val APP_SUBTITLE = "Dashboard Menu ZX"
-    const val DEFAULT_VERSION_NAME = "2.0.0 (shizuku)"
-    const val VERSION_CODE = 200
-    const val SYSTEM_BUILD_ID = "V-12B3C-DB3F"
+    const val DEFAULT_VERSION_NAME = "2.2.0 (release)"
+    const val VERSION_CODE = 220
+    const val SYSTEM_BUILD_ID = "V-12B3C-DB3F-v2.2.0"
     const val GAME_SPACE_VERSION = "T-shirtV100-00-000"
+
+    // GitHub Release & Download URLs
+    const val GITHUB_REPO_URL = "https://github.com/zuccheroxann/zx-dashboard"
+    const val GITHUB_RELEASES_URL = "https://github.com/zuccheroxann/zx-dashboard/releases/latest"
+    const val APK_FILENAME = "DYNIMETIZE_ZX-v2.2.0-release.apk"
+    const val APK_DOWNLOAD_URL = "https://github.com/zuccheroxann/zx-dashboard/releases/latest/download/DYNIMETIZE_ZX-v2.2.0-release.apk"
 
     // Developer Identity
     const val DEVELOPER_NAME = "ZUCCHERO XANN"

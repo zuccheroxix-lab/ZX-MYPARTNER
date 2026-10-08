@@ -2,11 +2,12 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const crypto = require('crypto');
 
 const PORT = 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const RELEASES_DIR = path.join(__dirname, 'releases');
-const APK_FILENAME = 'DYNIMETIZE_ZX-v2.0.0-release.apk';
+const APK_FILENAME = 'DYNIMETIZE_ZX-v2.2.0-release.apk';
 const APK_PATH = path.join(RELEASES_DIR, APK_FILENAME);
 
 const MIME_TYPES = {
@@ -29,6 +30,27 @@ process.on('unhandledRejection', (reason) => {
   console.error('[UNHANDLED_REJECTION]', reason);
 });
 
+function getActiveApkPath() {
+  if (fs.existsSync(APK_PATH)) return APK_PATH;
+  const fallbackNamed = path.join(RELEASES_DIR, 'app-release.apk');
+  if (fs.existsSync(fallbackNamed)) return fallbackNamed;
+  const pubNamed = path.join(PUBLIC_DIR, APK_FILENAME);
+  if (fs.existsSync(pubNamed)) return pubNamed;
+  const pubFallback = path.join(PUBLIC_DIR, 'app-release.apk');
+  if (fs.existsSync(pubFallback)) return pubFallback;
+  return APK_PATH;
+}
+
+function calculateSha256(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return '';
+    const fileBuffer = fs.readFileSync(filePath);
+    return crypto.createHash('sha256').update(fileBuffer).digest('hex');
+  } catch (e) {
+    return '';
+  }
+}
+
 const server = http.createServer((req, res) => {
   // CORS & Safety Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -44,20 +66,22 @@ const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   let pathname = decodeURIComponent(parsedUrl.pathname);
 
-  // APK Download Endpoints
+  // APK Download Endpoints (Supporting latest named APK, /download, /app-release.apk)
   if (
     pathname === `/${APK_FILENAME}` ||
     pathname === '/download' ||
+    pathname === '/download-latest' ||
     pathname === '/app-release.apk' ||
     pathname.endsWith('.apk')
   ) {
-    if (!fs.existsSync(APK_PATH)) {
+    const activeApk = getActiveApkPath();
+    if (!fs.existsSync(activeApk)) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('APK File not found on server.');
+      res.end('APK File not found on server. Please run build_apks.sh to generate.');
       return;
     }
 
-    const stat = fs.statSync(APK_PATH);
+    const stat = fs.statSync(activeApk);
     const fileSize = stat.size;
     const range = req.headers.range;
 
@@ -75,7 +99,7 @@ const server = http.createServer((req, res) => {
         'Content-Disposition': `attachment; filename="${APK_FILENAME}"`,
       });
 
-      const fileStream = fs.createReadStream(APK_PATH, { start, end });
+      const fileStream = fs.createReadStream(activeApk, { start, end });
       fileStream.on('error', (e) => console.error('Stream error:', e.message));
       fileStream.pipe(res);
     } else {
@@ -84,7 +108,7 @@ const server = http.createServer((req, res) => {
         'Content-Type': 'application/vnd.android.package-archive',
         'Content-Disposition': `attachment; filename="${APK_FILENAME}"`,
         'Accept-Ranges': 'bytes',
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
       });
 
       if (req.method === 'HEAD') {
@@ -92,7 +116,7 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      const fileStream = fs.createReadStream(APK_PATH);
+      const fileStream = fs.createReadStream(activeApk);
       fileStream.on('error', (e) => console.error('Stream error:', e.message));
       fileStream.pipe(res);
     }
@@ -101,8 +125,10 @@ const server = http.createServer((req, res) => {
 
   // API Status Endpoint
   if (pathname === '/api/status') {
-    let apkExists = fs.existsSync(APK_PATH);
-    let size = apkExists ? fs.statSync(APK_PATH).size : 0;
+    const activeApk = getActiveApkPath();
+    const apkExists = fs.existsSync(activeApk);
+    const size = apkExists ? fs.statSync(activeApk).size : 0;
+    const sha256 = apkExists ? calculateSha256(activeApk) : '';
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(
       JSON.stringify({
@@ -110,10 +136,12 @@ const server = http.createServer((req, res) => {
         filename: APK_FILENAME,
         exists: apkExists,
         size: size,
-        version: '2.0.0',
-        versionCode: 200,
+        version: '2.2.0',
+        versionCode: 220,
         applicationId: 'com.aistudio.zxdashboard.zxapp',
-        sha256: '1591478ce1cb6ba02250a83674409fc367ed0be2f704f165c40be8e51b4993a2',
+        sha256: sha256,
+        downloadUrl: `/${APK_FILENAME}`,
+        githubReleaseUrl: 'https://github.com/zuccheroxann/zx-dashboard/releases/latest',
       })
     );
     return;
@@ -150,5 +178,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`[DYNIMETIZE ZX SERVER] Running on http://0.0.0.0:${PORT}`);
+  console.log(`[DYNIMETIZE ZX SERVER] Running on http://0.0.0.0:${PORT} - Serving ${APK_FILENAME}`);
 });

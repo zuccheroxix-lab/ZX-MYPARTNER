@@ -18,43 +18,39 @@ else
     exit 1
 fi
 
-# Ensure clean production signing with my-upload-key.jks if present
-if [ -f "$SCRIPT_DIR/my-upload-key.jks" ]; then
-    export KEYSTORE_PATH="$SCRIPT_DIR/my-upload-key.jks"
-    export STORE_PASSWORD="dynimetize_zx_2026"
-    export KEY_ALIAS="upload"
-    export KEY_PASSWORD="dynimetize_zx_2026"
-    echo "✔ Production release keystore loaded: my-upload-key.jks"
-fi
+echo "[1/4] Cleaning previous build cache and old APK artifacts..."
+rm -f releases/*.apk release/*.apk public/*.apk .aistudio/artifacts/brain/6e88e88f-842a-46b6-bb5f-6a9cf9d00d70/*.apk
+rm -rf app/build/outputs/apk/release/*
 
-echo "[1/3] Building RELEASE APK via $GRADLE_CMD assembleRelease..."
+echo "[2/4] Building FRESH RELEASE APK v2.2.0 (Build 220) via $GRADLE_CMD assembleRelease..."
 $GRADLE_CMD assembleRelease
 
 RELEASE_APK="app/build/outputs/apk/release/app-release.apk"
 
-echo "[2/3] Verifying Release APK output..."
+echo "[3/4] Verifying Release APK output..."
 if [ ! -f "$RELEASE_APK" ]; then
     echo "[ERROR] Release APK not found at $RELEASE_APK!"
     exit 1
 fi
 
-# Clean old debug APKs
-rm -f releases/app-debug.apk release/app-debug.apk .aistudio/artifacts/brain/6e88e88f-842a-46b6-bb5f-6a9cf9d00d70/app-debug.apk
-
-# Prepare output release directories
-NAMED_APK="DYNIMETIZE_ZX-v2.0.0-release.apk"
+# Prepare output release directories with v2.2.0 artifacts
+NAMED_APK="DYNIMETIZE_ZX-v2.2.0-release.apk"
 mkdir -p releases release public .aistudio/artifacts/brain/6e88e88f-842a-46b6-bb5f-6a9cf9d00d70
 
 cp -f "$RELEASE_APK" "releases/$NAMED_APK"
 cp -f "$RELEASE_APK" "releases/app-release.apk"
+cp -f "$RELEASE_APK" "release/$NAMED_APK"
+cp -f "$RELEASE_APK" "release/app-release.apk"
 cp -f "$RELEASE_APK" "public/$NAMED_APK"
 cp -f "$RELEASE_APK" "public/app-release.apk"
 cp -f "$RELEASE_APK" ".aistudio/artifacts/brain/6e88e88f-842a-46b6-bb5f-6a9cf9d00d70/$NAMED_APK"
 
-echo "[3/3] Validation Summary:"
+echo "[4/4] Validation Summary:"
 echo "----------------------------------------------------------"
 RELEASE_SIZE=$(stat -c%s "releases/$NAMED_APK" 2>/dev/null || stat -f%z "releases/$NAMED_APK" 2>/dev/null || wc -c < "releases/$NAMED_APK")
+SHA256_SUM=$(sha256sum "releases/$NAMED_APK" | awk '{print $1}')
 
 echo "✔ RELEASE APK : releases/$NAMED_APK ($RELEASE_SIZE bytes)"
+echo "✔ SHA-256     : $SHA256_SUM"
 echo "----------------------------------------------------------"
-echo "BUILD SUCCESSFUL! Release APK is verified and ready for download."
+echo "BUILD SUCCESSFUL! Fresh Release APK v2.2.0 is verified and published ready for download."

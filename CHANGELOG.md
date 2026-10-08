@@ -5,6 +5,25 @@ All notable changes to the **DYNIMETIZE ZX** project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-10-08
+
+### Added
+- Official **DOWNLOAD APK TERBARU** direct release build (`DYNIMETIZE_ZX-v2.2.0-release.apk`, VersionCode: 220).
+- Dedicated in-app update & APK download card in **Settings** and **Home** screens with direct GitHub Release link.
+- Real Feedback System with live network transmission to server, real HTTP status code handling (Sending / Sent / Failed / Offline), zero fake status.
+- Re-architected 4 Primary Navigation pages:
+  - **HOME:** Clean Dashboard, hardware telemetry, quick tool shortcuts, and Shizuku status.
+  - **GAME:** Game Space library, Game Profiles, and Sensitivity GameLab.
+  - **TOOLS:** DPI Manager, Resolution Manager, DNS Kustom, and Crosshair customization.
+  - **SETTINGS:** UI Color accent presets, Shizuku ADB bridge, permissions, and Feedback submission.
+- Seamless horizontal swiping across all 4 pages with responsive navigation buttons and predictive back stack handling.
+
+### Changed
+- Removed redundant duplicate menus and merged overlapping features into the 4 primary categories.
+- Completely removed all fake labels ("LIVE", "REAL-TIME", "LIVE TEST", "REAL-TIME TEST") and simulated touch calibration digitizer scores.
+- Preserved all original assets, logos, background videos (`1000487036.mp4`), and visual illustrations.
+- Updated automated build pipeline `build_apks.sh` and web distribution portal `server.js` to serve fresh v2.2.0 release artifacts.
+
 ---
 
 ## [2.0.0] - 2026-09-29

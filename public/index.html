@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DYNIMETIZE ZX - Download Release APK</title>
+  <title>DYNIMETIZE ZX - Download Release APK v2.2.0</title>
   <style>
     :root {
       --bg-color: #08090C;
@@ -13,8 +13,9 @@
       --gold-glow: rgba(255, 179, 0, 0.35);
       --green: #00E676;
       --green-glow: rgba(0, 230, 118, 0.35);
+      --cyan: #00D2FF;
       --text: #F0F2F5;
-      --text-dim: #9E9E9E;
+      --text-dim: #9E9E98;
       --border: rgba(255, 179, 0, 0.3);
       --surface: #12141C;
     }
@@ -36,7 +37,7 @@
       justify-content: center;
       padding: 20px;
       background-image: 
-        radial-gradient(circle at 50% 10%, rgba(255, 179, 0, 0.1) 0%, transparent 60%),
+        radial-gradient(circle at 50% 10%, rgba(255, 179, 0, 0.12) 0%, transparent 60%),
         radial-gradient(circle at 80% 80%, rgba(255, 143, 0, 0.08) 0%, transparent 50%);
     }
 
@@ -45,7 +46,7 @@
       max-width: 600px;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 18px;
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 30px var(--gold-glow);
       padding: 28px;
       text-align: center;
@@ -110,9 +111,9 @@
     }
 
     .apk-card {
-      background: rgba(10, 11, 15, 0.9);
-      border: 1px solid rgba(255, 179, 0, 0.25);
-      border-radius: 12px;
+      background: rgba(10, 11, 15, 0.95);
+      border: 1px solid rgba(255, 179, 0, 0.28);
+      border-radius: 14px;
       padding: 18px;
       margin-bottom: 20px;
       text-align: left;
@@ -169,7 +170,7 @@
       letter-spacing: 1px;
       text-transform: uppercase;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
       text-decoration: none;
       box-shadow: 0 6px 20px rgba(255, 179, 0, 0.4);
@@ -194,10 +195,10 @@
 
     .btn-secondary {
       flex: 1;
-      padding: 10px 14px;
+      padding: 11px 14px;
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
+      border-radius: 10px;
       color: var(--text);
       font-size: 13px;
       font-weight: 600;
@@ -219,7 +220,7 @@
     .status-box {
       margin-top: 18px;
       padding: 14px;
-      border-radius: 8px;
+      border-radius: 10px;
       background: rgba(0, 230, 118, 0.08);
       border: 1px solid rgba(0, 230, 118, 0.3);
       color: var(--green);
@@ -252,10 +253,10 @@
 
     .info-section {
       margin-top: 20px;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.45);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-      padding: 14px;
+      border-radius: 12px;
+      padding: 16px;
       text-align: left;
       font-size: 12px;
       color: var(--text-dim);
@@ -285,7 +286,7 @@
       background: rgba(0,0,0,0.6);
       border-radius: 6px;
       font-family: monospace;
-      font-size: 10.5px;
+      font-size: 11px;
       color: var(--text-dim);
       word-break: break-all;
     }
@@ -302,7 +303,7 @@
   <div class="container">
     <div id="badgeStatus" class="badge-status">
       <span class="pulse-dot"></span>
-      <span>APK RELEASE READY</span>
+      <span id="badgeText">APK RELEASE v2.2.0 READY</span>
     </div>
 
     <h1>DYNIMETIZE ZX</h1>
@@ -311,7 +312,7 @@
     <div class="apk-card">
       <div class="apk-filename">
         <span>📦</span>
-        <span>DYNIMETIZE_ZX-v2.0.0-release.apk</span>
+        <span id="apkNameDisplay">DYNIMETIZE_ZX-v2.2.0-release.apk</span>
       </div>
 
       <div class="meta-grid">
@@ -321,11 +322,11 @@
         </div>
         <div class="meta-item">
           <span class="meta-label">Version</span>
-          <span class="meta-value">v2.0.0 (Code: 200)</span>
+          <span class="meta-value" id="metaVersion">v2.2.0 (Build 220)</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">File Size</span>
-          <span class="meta-value">25,827,282 bytes (~24.63 MB)</span>
+          <span class="meta-value" id="metaSize">Menghitung...</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Signature</span>
@@ -342,14 +343,13 @@
       </div>
     </div>
 
-    <!-- Feature Update Badges -->
+    <!-- Feature Update Badges (Clean 4-Nav Structure) -->
     <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:18px;">
-      <span style="background:rgba(239,68,68,0.2); border:1px solid #EF4444; color:#FCA5A5; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">⚡ Performance Mode</span>
-      <span style="background:rgba(255,179,0,0.2); border:1px solid #FFB300; color:#FDE047; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">🎮 Gaming HUD (FPS/RAM/Temp/Ping)</span>
-      <span style="background:rgba(56,189,248,0.2); border:1px solid #38BDF8; color:#BAE6FD; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">🎯 Game Profiles</span>
-      <span style="background:rgba(167,139,250,0.2); border:1px solid #A78BFA; color:#DDD6FE; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">📊 System Status</span>
-      <span style="background:rgba(16,185,129,0.2); border:1px solid #10B981; color:#A7F3D0; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">🧹 Safe Clear Cache</span>
-      <span style="background:rgba(236,72,153,0.2); border:1px solid #EC4899; color:#F472B6; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">🔐 Native Biometric & Key Login</span>
+      <span style="background:rgba(255,179,0,0.18); border:1px solid #FFB300; color:#FDE047; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">🏠 HOME: Dashboard & Telemetry</span>
+      <span style="background:rgba(56,189,248,0.18); border:1px solid #38BDF8; color:#BAE6FD; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">🎮 GAME: Space & Sensitivity</span>
+      <span style="background:rgba(16,185,129,0.18); border:1px solid #10B981; color:#A7F3D0; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">🛠 TOOLS: DPI, Res & Crosshair</span>
+      <span style="background:rgba(167,139,250,0.18); border:1px solid #A78BFA; color:#DDD6FE; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">⚙ SETTINGS: Shizuku & Feedback</span>
+      <span style="background:rgba(236,72,153,0.18); border:1px solid #EC4899; color:#F472B6; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">📨 Real Feedback Engine</span>
     </div>
 
     <!-- Main Download Action Button -->
@@ -359,16 +359,19 @@
         <polyline points="7 10 12 15 17 10"></polyline>
         <line x1="12" y1="15" x2="12" y2="3"></line>
       </svg>
-      DOWNLOAD APK
+      DOWNLOAD APK TERBARU
     </button>
 
     <!-- Secondary Alternatives -->
     <div class="btn-secondary-group">
-      <button class="btn-secondary" onclick="openDirectTab()">
-        🌐 Buka di Tab Baru
-      </button>
+      <a class="btn-secondary" href="https://github.com/zuccheroxann/zx-dashboard/releases/latest" target="_blank">
+        🐙 GitHub Release
+      </a>
       <button class="btn-secondary" onclick="copyDownloadUrl()">
-        📋 Salin Link Download
+        📋 Salin Link APK
+      </button>
+      <button class="btn-secondary" onclick="openDirectTab()">
+        🌐 Tab Baru
       </button>
     </div>
 
@@ -377,26 +380,49 @@
 
     <div class="info-section">
       <div class="info-title">
-        <span>💡</span> Alternatif Langsung Dari AI Studio:
+        <span>💡</span> Verifikasi & Alternatif Download:
       </div>
       <ol class="info-list">
-        <li>Buka <strong>File Explorer</strong> di panel sebelah kiri editor AI Studio.</li>
-        <li>Buka folder <strong><code>releases/</code></strong>.</li>
-        <li>Klik kanan pada <strong><code>DYNIMETIZE_ZX-v2.0.0-release.apk</code></strong> lalu pilih <strong>Download</strong>.</li>
-        <li>Atau klik menu <strong>Settings (⚙️)</strong> di pojok kanan atas AI Studio untuk export APK.</li>
+        <li>Klik tombol emas <strong>DOWNLOAD APK TERBARU</strong> di atas untuk mengunduh versi v2.2.0 langsung.</li>
+        <li>Buka <strong>File Explorer</strong> di panel sebelah kiri editor AI Studio, masuk ke folder <strong><code>releases/</code></strong> lalu klik kanan <strong><code>DYNIMETIZE_ZX-v2.2.0-release.apk</code></strong> &gt; Download.</li>
+        <li>Atau kunjungi repository resmi di <strong><a href="https://github.com/zuccheroxann/zx-dashboard/releases/latest" target="_blank" style="color:var(--gold);text-decoration:none;">GitHub Releases</a></strong>.</li>
       </ol>
 
       <div class="checksum-box">
         <div class="checksum-label">SHA-256 Checksum:</div>
-        1591478ce1cb6ba02250a83674409fc367ed0be2f704f165c40be8e51b4993a2
+        <span id="checksumDisplay">Menghitung...</span>
       </div>
     </div>
   </div>
 
   <script>
-    const APK_URL = '/DYNIMETIZE_ZX-v2.0.0-release.apk';
-    const APK_FILENAME = 'DYNIMETIZE_ZX-v2.0.0-release.apk';
+    const APK_FILENAME = 'DYNIMETIZE_ZX-v2.2.0-release.apk';
+    const APK_URL = '/' + APK_FILENAME;
     const statusBox = document.getElementById('statusBox');
+
+    // Fetch dynamic status from server API
+    async function loadStatus() {
+      try {
+        const res = await fetch('/api/status');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.size > 0) {
+            const mb = (data.size / (1024 * 1024)).toFixed(2);
+            document.getElementById('metaSize').innerText = `${data.size.toLocaleString()} bytes (~${mb} MB)`;
+          }
+          if (data.sha256) {
+            document.getElementById('checksumDisplay').innerText = data.sha256;
+          }
+          if (data.version) {
+            document.getElementById('metaVersion').innerText = `v${data.version} (Build ${data.versionCode})`;
+            document.getElementById('badgeText').innerText = `APK RELEASE v${data.version} READY`;
+          }
+        }
+      } catch (e) {
+        console.warn('Status fetch error:', e);
+      }
+    }
+    loadStatus();
 
     function openDirectTab() {
       const fullUrl = window.location.origin + APK_URL;
@@ -408,7 +434,7 @@
       const fullUrl = window.location.origin + APK_URL;
       navigator.clipboard.writeText(fullUrl).then(() => {
         statusBox.style.display = 'block';
-        statusBox.innerHTML = '📋 <strong>Link berhasil disalin ke clipboard!</strong><br><span style="font-size:12px;color:#bbb;">Paste link ini di tab browser Anda untuk langsung mengunduh APK.</span>';
+        statusBox.innerHTML = '📋 <strong>Link berhasil disalin ke clipboard!</strong><br><span style="font-size:12px;color:#bbb;">' + fullUrl + '</span>';
       }).catch(() => {
         prompt("Salin link download berikut:", fullUrl);
       });
@@ -416,14 +442,14 @@
 
     function showDownloadComplete() {
       statusBox.style.display = 'block';
-      statusBox.innerHTML = '✅ <strong>APK RELEASE READY</strong><br><span style="font-size:16px;">DOWNLOAD COMPLETE</span>';
+      statusBox.innerHTML = '✅ <strong>APK RELEASE v2.2.0 SIAP</strong><br><span style="font-size:15px;">DOWNLOAD SELESAI & TERVERIFIKASI</span>';
     }
 
     async function startDownload() {
       statusBox.style.display = 'block';
       statusBox.innerHTML = `
         <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-          <span>⏳ Mengunduh APK ke perangkat...</span>
+          <span>⏳ Mengunduh ${APK_FILENAME}...</span>
           <span id="percentText">0%</span>
         </div>
         <div class="progress-bar-container">
@@ -436,7 +462,7 @@
         if (!response.ok) throw new Error('HTTP ' + response.status);
 
         const contentLength = response.headers.get('content-length');
-        const total = contentLength ? parseInt(contentLength, 10) : 19056586;
+        const total = contentLength ? parseInt(contentLength, 10) : 25000000;
         const reader = response.body.getReader();
         const chunks = [];
         let received = 0;
@@ -471,8 +497,7 @@
 
         showDownloadComplete();
       } catch (err) {
-        console.warn('Blob fetch failed, falling back to direct stream:', err);
-        // Fallback: direct window.location / anchor download
+        console.warn('Stream download failed, using direct anchor fallback:', err);
         const a = document.createElement('a');
         a.href = APK_URL;
         a.download = APK_FILENAME;
@@ -482,13 +507,6 @@
         showDownloadComplete();
       }
     }
-
-    // Auto-trigger on initial load after 1.2s delay
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        startDownload();
-      }, 1200);
-    });
   </script>
 </body>
 </html>
