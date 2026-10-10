@@ -34,9 +34,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -51,6 +51,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -76,32 +78,15 @@ import com.example.data.AuthManager
 import com.example.data.Config
 import com.example.ui.components.LinkHandler
 import com.example.ui.components.VideoBackgroundPlayer
+import kotlinx.coroutines.delay
 
 /**
- * Premium Full Screen Video Background Login Screen for DYNIMETIZE ZX.
+ * Dedicated App Login Screen for DYNIMETIZE ZX.
  * Layout Hierarchy:
- * VIDEO / BACKGROUND (1000487036.mp4)
- * ↓
- * DARK TRANSPARENT OVERLAY
- * ↓
- * ICON / LOGO (Glowing Shield)
- * ↓
- * ZUCCHERO XANN
- * ↓
- * SECURE LOGIN
- * ↓
- * [ 🔐 LOGIN DENGAN SIDIK JARI ] (Always visible; AndroidX BiometricPrompt)
- * "Gunakan biometrik perangkat untuk masuk"
- * ↓
- * ATAU
- * ↓
- * LOGIN DENGAN KEY
- * ↓
- * INPUT KEY ("Masukkan Key")
- * ↓
- * LOGIN
- * ↓
- * MINTA KEY VIA WHATSAPP (+62 878-3546-1585)
+ * APP LOGIN
+ * [ PIN ]
+ * [ LOGIN ]
+ * [ USE BIOMETRIC ]
  */
 @Composable
 fun LoginScreen(
@@ -113,13 +98,39 @@ fun LoginScreen(
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
 
-    var inputKey by remember { mutableStateOf("") }
-    var keyVisible by remember { mutableStateOf(false) }
+    var inputPin by remember { mutableStateOf("") }
+    var pinVisible by remember { mutableStateOf(false) }
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
+    val isBiometricReady = remember { authManager.isBiometricAvailable() }
+    val remainingLockoutSeconds by authManager.lockoutTimeRemaining.collectAsState()
+    val isLockedOut = remainingLockoutSeconds > 0
+
+    // Countdown timer effect during lockout
+    LaunchedEffect(isLockedOut, remainingLockoutSeconds) {
+        if (isLockedOut) {
+            errorMessage = "Terlalu banyak percobaan gagal. Silakan tunggu $remainingLockoutSeconds detik."
+            while (authManager.isLockedOut()) {
+                delay(1000)
+                val sec = authManager.getRemainingLockoutSeconds()
+                if (sec > 0) {
+                    errorMessage = "Terlalu banyak percobaan gagal. Silakan tunggu $sec detik."
+                } else {
+                    errorMessage = null
+                    break
+                }
+            }
+        }
+    }
+
     fun triggerBiometricLogin() {
+        if (isLockedOut) {
+            errorMessage = "Autentikasi terkunci sementara. Tunggu $remainingLockoutSeconds detik."
+            return
+        }
+
         errorMessage = null
         val activity = context as? FragmentActivity
         if (activity == null) {
@@ -129,7 +140,7 @@ fun LoginScreen(
 
         val biometricStatus = authManager.checkBiometricStatus()
         if (biometricStatus != BiometricManager.BIOMETRIC_SUCCESS) {
-            val msg = "Biometrik tidak tersedia. Gunakan Login dengan Key."
+            val msg = "Biometrik tidak tersedia. Gunakan PIN aplikasi."
             errorMessage = msg
             try {
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -149,7 +160,7 @@ fun LoginScreen(
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    // If user canceled or dismissed, do not display as persistent error
+                    // If user canceled or dismissed, do not display persistent error
                     if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
                         errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
                         errorCode != BiometricPrompt.ERROR_CANCELED
@@ -160,15 +171,15 @@ fun LoginScreen(
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
-                    errorMessage = "Sidik jari tidak cocok. Silakan coba lagi."
+                    errorMessage = "Sidik jari tidak cocok. Silakan coba lagi atau gunakan PIN."
                 }
             }
 
             val biometricPrompt = BiometricPrompt(activity, executor, callback)
             val promptInfo = BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Autentikasi Sidik Jari")
-                .setSubtitle("Sentuh sensor sidik jari untuk masuk")
-                .setNegativeButtonText("Gunakan Key")
+                .setTitle("Autentikasi Biometrik")
+                .setSubtitle("Sentuh sensor sidik jari untuk membuka aplikasi")
+                .setNegativeButtonText("Gunakan PIN")
                 .build()
 
             biometricPrompt.authenticate(promptInfo)
@@ -177,30 +188,39 @@ fun LoginScreen(
         }
     }
 
-    fun handleKeyLogin() {
+    fun handlePinLogin() {
         focusManager.clearFocus()
         errorMessage = null
 
-        val trimmedKey = inputKey.trim()
-        if (trimmedKey.isEmpty()) {
-            errorMessage = "Key tidak boleh kosong."
+        if (isLockedOut) {
+            errorMessage = "Terlalu banyak percobaan gagal. Silakan tunggu $remainingLockoutSeconds detik."
+            return
+        }
+
+        val trimmedPin = inputPin.trim()
+        if (trimmedPin.isEmpty()) {
+            errorMessage = "PIN tidak boleh kosong."
             return
         }
 
         isLoading = true
-        val isValid = authManager.verifyKey(trimmedKey)
+        val isValid = authManager.verifyPin(trimmedPin)
         isLoading = false
 
         if (isValid) {
             onLoginSuccess()
         } else {
-            errorMessage = "Key tidak valid"
+            if (authManager.isLockedOut()) {
+                errorMessage = "Terlalu banyak percobaan gagal. Silakan tunggu ${authManager.getRemainingLockoutSeconds()} detik."
+            } else {
+                errorMessage = "PIN tidak valid. Silakan coba lagi."
+            }
         }
     }
 
-    // Attempt automatic biometric prompt only if biometric hardware is ready & enrolled
+    // Auto-prompt biometric as quick entry if biometric is ready and user is not locked out
     LaunchedEffect(Unit) {
-        if (authManager.isBiometricAvailable()) {
+        if (isBiometricReady && !isLockedOut) {
             triggerBiometricLogin()
         }
     }
@@ -211,54 +231,52 @@ fun LoginScreen(
             .testTag("login_screen_root")
     ) {
         // 1. FULL SCREEN VIDEO BACKGROUND (1000487036.mp4)
-        // Autoplay, looping, muted, center-cropped to fill screen completely
         VideoBackgroundPlayer(
             modifier = Modifier.fillMaxSize()
         )
 
         // 2. DARK TRANSPARENT GRADIENT OVERLAY
-        // Keeps the stunning Gojo anime visual visible while making UI text and buttons 100% legible
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0x99050508), // 60% black top
-                            Color(0x55090A0E), // 33% black middle
-                            Color(0x990A0B10), // 60% black lower-middle
-                            Color(0xF508090D)  // 96% black bottom for controls
+                            Color(0x99050508),
+                            Color(0x66090A0E),
+                            Color(0xAA0A0B10),
+                            Color(0xF508090D)
                         )
                     )
                 )
         )
 
-        // 3. FOREGROUND LOGIN CONTENT (Centered Brand & Controls)
+        // 3. FOREGROUND LOGIN CONTENT
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 22.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // TOP SPACER & BRAND IDENTITY
+            // BRAND & TITLE: "APP LOGIN"
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 28.dp, bottom = 12.dp)
+                modifier = Modifier.padding(top = 36.dp, bottom = 12.dp)
             ) {
                 // Futuristic Glowing Shield Badge
                 Box(
                     modifier = Modifier
-                        .size(64.dp)
+                        .size(68.dp)
                         .clip(CircleShape)
                         .background(Color(0xCC10121A))
                         .border(
-                            width = 1.2.dp,
+                            width = 1.3.dp,
                             brush = Brush.linearGradient(
-                                listOf(Color(0xFF38BDF8), Color(0xFF6366F1))
+                                listOf(Color(0xFF38BDF8), Color(0xFF10B981))
                             ),
                             shape = CircleShape
                         ),
@@ -266,58 +284,38 @@ fun LoginScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Security,
-                        contentDescription = "Security Shield",
+                        contentDescription = "App Security Shield",
                         tint = Color(0xFF38BDF8),
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(34.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // BRAND: "ZUCCHERO XANN"
+                // Title: APP LOGIN (Requested)
                 Text(
-                    text = "ZUCCHERO XANN",
+                    text = "APP LOGIN",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         color = Color.White,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 24.sp,
-                        letterSpacing = 1.2.sp
+                        letterSpacing = 1.5.sp
                     )
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // SUBTITLE: "SECURE LOGIN"
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0x330284C7))
-                        .border(0.8.dp, Color(0xFF38BDF8).copy(alpha = 0.5f), RoundedCornerShape(20.dp))
-                        .padding(horizontal = 14.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "SECURE LOGIN",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = Color(0xFF7DD3FC),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            letterSpacing = 1.6.sp
-                        )
-                    )
-                }
-
                 Text(
-                    text = Config.APP_NAME,
+                    text = "Masukkan PIN aplikasi untuk melanjutkan",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFFA1A1AA),
-                        fontSize = 11.sp,
-                        letterSpacing = 0.5.sp
-                    ),
-                    modifier = Modifier.padding(top = 4.dp)
+                        color = Color(0xFF94A3B8),
+                        fontSize = 11.5.sp,
+                        letterSpacing = 0.3.sp
+                    )
                 )
             }
 
-            // MIDDLE NOTIFICATION BANNER (ERROR / INFO MESSAGES)
+            // NOTIFICATION BANNER (ERROR / LOCKOUT)
             AnimatedVisibility(
                 visible = errorMessage != null,
                 enter = fadeIn() + slideInVertically(),
@@ -328,8 +326,8 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xEE2A0808))
-                        .border(1.dp, Color(0xFFEF4444), RoundedCornerShape(12.dp))
+                        .background(if (isLockedOut) Color(0xEE2A1A08) else Color(0xEE2A0808))
+                        .border(1.dp, if (isLockedOut) Color(0xFFFFB300) else Color(0xFFEF4444), RoundedCornerShape(12.dp))
                         .padding(horizontal = 14.dp, vertical = 10.dp)
                         .testTag("login_error_banner")
                 ) {
@@ -338,16 +336,16 @@ fun LoginScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ErrorOutline,
-                            contentDescription = "Error",
-                            tint = Color(0xFFF87171),
+                            imageVector = if (isLockedOut) Icons.Default.Timer else Icons.Default.ErrorOutline,
+                            contentDescription = "Status",
+                            tint = if (isLockedOut) Color(0xFFFFB300) else Color(0xFFF87171),
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = errorMessage ?: "",
                             style = MaterialTheme.typography.bodyMedium.copy(
-                                color = Color(0xFFFECACA),
+                                color = if (isLockedOut) Color(0xFFFEF3C7) else Color(0xFFFECACA),
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 12.sp,
                                 lineHeight = 16.sp
@@ -358,11 +356,14 @@ fun LoginScreen(
                 }
             }
 
-            // BOTTOM CONTROLS CARD (GLASSMORPHIC DARK CONTAINER)
+            // CONTROLS CONTAINER:
+            // [ PIN ]
+            // [ LOGIN ]
+            // [ USE BIOMETRIC ]
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 20.dp)
+                    .padding(bottom = 24.dp)
                     .clip(RoundedCornerShape(22.dp))
                     .background(Color(0xEA0D0F16))
                     .border(
@@ -372,237 +373,177 @@ fun LoginScreen(
                         ),
                         shape = RoundedCornerShape(22.dp)
                     )
-                    .padding(18.dp)
+                    .padding(20.dp)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
 
-                    // 1. [ 🔐 LOGIN DENGAN SIDIK JARI ]
-                    // Dedicated card/button with cyan glow, fingerprint icon, title & subtitle
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        Color(0x330284C7),
-                                        Color(0x220EA5E9),
-                                        Color(0x332563EB)
-                                    )
-                                )
-                            )
-                            .border(
-                                width = 1.3.dp,
-                                brush = Brush.horizontalGradient(
-                                    listOf(
-                                        Color(0xFF38BDF8),
-                                        Color(0xFF60A5FA),
-                                        Color(0xFF38BDF8)
-                                    )
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                            .clickable {
-                                triggerBiometricLogin()
-                            }
-                            .padding(horizontal = 14.dp, vertical = 12.dp)
-                            .testTag("btn_login_sidik_jari"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Glowing fingerprint icon container
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0x3338BDF8))
-                                    .border(1.dp, Color(0xFF38BDF8), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Fingerprint,
-                                    contentDescription = "Icon Sidik Jari",
-                                    tint = Color(0xFF38BDF8),
-                                    modifier = Modifier.size(26.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "LOGIN DENGAN SIDIK JARI",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.5.sp,
-                                        letterSpacing = 0.4.sp
-                                    )
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "Gunakan biometrik perangkat untuk masuk",
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = Color(0xFFBAE6FD),
-                                        fontSize = 10.5.sp,
-                                        fontWeight = FontWeight.Normal
-                                    )
-                                )
-                            }
-                        }
-                    }
-
-                    // 2. SEPARATOR: "ATAU"
+                    // 1. [ PIN ] INPUT
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        HorizontalDivider(
-                            modifier = Modifier.weight(1f),
-                            color = Color(0x33FFFFFF),
-                            thickness = 0.8.dp
-                        )
                         Text(
-                            text = "ATAU",
+                            text = "PIN APLIKASI",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                color = Color(0xFF94A3B8),
+                                color = Color(0xFFCBD5E1),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                letterSpacing = 1.2.sp
-                            ),
-                            modifier = Modifier.padding(horizontal = 10.dp)
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.weight(1f),
-                            color = Color(0x33FFFFFF),
-                            thickness = 0.8.dp
-                        )
-                    }
-
-                    // 3. LOGIN DENGAN KEY SECTION
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Key,
-                                contentDescription = null,
-                                tint = Color(0xFFFBBF24),
-                                modifier = Modifier.size(15.dp)
+                                fontSize = 11.5.sp,
+                                letterSpacing = 0.8.sp
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                        )
+                        if (isLockedOut) {
                             Text(
-                                text = "LOGIN DENGAN KEY",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color(0xFFE2E8F0),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.5.sp,
-                                    letterSpacing = 0.6.sp
-                                )
+                                text = "Terkunci ($remainingLockoutSeconds s)",
+                                color = Color(0xFFFFB300),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace
                             )
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                        // Input Key
-                        OutlinedTextField(
-                            value = inputKey,
-                            onValueChange = {
-                                inputKey = it
+                    OutlinedTextField(
+                        value = inputPin,
+                        onValueChange = {
+                            if (it.length <= 12) {
+                                inputPin = it
                                 errorMessage = null
-                            },
-                            label = { Text("Masukkan Key") },
-                            placeholder = { Text("Ketik key akses...") },
-                            singleLine = true,
-                            visualTransformation = if (keyVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Ascii,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = { handleKeyLogin() }
-                            ),
-                            leadingIcon = {
+                            }
+                        },
+                        label = { Text("PIN") },
+                        placeholder = { Text("••••") },
+                        singleLine = true,
+                        enabled = !isLockedOut,
+                        visualTransformation = if (pinVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.NumberPassword,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { handlePinLogin() }
+                        ),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "PIN Lock",
+                                tint = Color(0xFF38BDF8),
+                                modifier = Modifier.size(19.dp)
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { pinVisible = !pinVisible }) {
                                 Icon(
-                                    imageVector = Icons.Default.Key,
-                                    contentDescription = null,
-                                    tint = Color(0xFFFBBF24),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
-                            trailingIcon = {
-                                IconButton(onClick = { keyVisible = !keyVisible }) {
-                                    Icon(
-                                        imageVector = if (keyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "Toggle Visibility",
-                                        tint = Color(0xFF94A3B8),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF38BDF8),
-                                unfocusedBorderColor = Color(0x44FFFFFF),
-                                focusedLabelColor = Color(0xFF38BDF8),
-                                unfocusedLabelColor = Color(0xFF94A3B8),
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFF38BDF8)
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("input_login_key")
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Tombol LOGIN
-                        Button(
-                            onClick = { handleKeyLogin() },
-                            enabled = !isLoading,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF0284C7),
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(46.dp)
-                                .testTag("btn_submit_login_key")
-                        ) {
-                            if (isLoading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.Lock,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(17.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "LOGIN",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.5.sp,
-                                        letterSpacing = 0.5.sp
-                                    )
+                                    imageVector = if (pinVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = "Toggle Visibility",
+                                    tint = Color(0xFF94A3B8),
+                                    modifier = Modifier.size(19.dp)
                                 )
                             }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF38BDF8),
+                            unfocusedBorderColor = Color(0x44FFFFFF),
+                            focusedLabelColor = Color(0xFF38BDF8),
+                            unfocusedLabelColor = Color(0xFF94A3B8),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color(0xFF38BDF8)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_login_pin")
+                            .testTag("input_login_key")
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 2. [ LOGIN ] BUTTON
+                    Button(
+                        onClick = { handlePinLogin() },
+                        enabled = !isLoading && !isLockedOut,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF0284C7),
+                            disabledContainerColor = Color(0xFF1E293B),
+                            contentColor = Color.White,
+                            disabledContentColor = Color(0xFF64748B)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("btn_submit_login")
+                            .testTag("btn_submit_login_key")
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = "LOGIN",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.5.sp,
+                                    letterSpacing = 1.sp
+                                )
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    // 3. [ USE BIOMETRIC ] BUTTON
+                    if (isBiometricReady) {
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Button(
+                            onClick = { triggerBiometricLogin() },
+                            enabled = !isLockedOut,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF0F766E),
+                                disabledContainerColor = Color(0xFF134E4A).copy(alpha = 0.5f),
+                                contentColor = Color.White,
+                                disabledContentColor = Color(0xFF64748B)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .testTag("btn_use_biometric")
+                                .testTag("btn_login_sidik_jari")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Fingerprint,
+                                contentDescription = "Biometric Icon",
+                                tint = Color(0xFF2DD4BF),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "USE BIOMETRIC",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    letterSpacing = 0.8.sp
+                                )
+                            )
+                        }
+                    } else {
+                        // Helpful note if biometric hardware is not present on this device
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Sensor biometrik tidak tersedia di perangkat ini — gunakan PIN",
+                            color = Color(0xFF64748B),
+                            fontSize = 10.5.sp,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     HorizontalDivider(
                         color = Color(0x22FFFFFF),
@@ -611,7 +552,7 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // 4. BUTTON "MINTA KEY VIA WHATSAPP"
+                    // 4. ASSISTANCE LINK (WHATSAPP)
                     Button(
                         onClick = {
                             LinkHandler.openWhatsApp(context, Config.WA_KEY_URL)
@@ -623,21 +564,21 @@ fun LoginScreen(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(46.dp)
+                            .height(44.dp)
                             .testTag("btn_minta_key_wa")
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Chat,
                             contentDescription = "WhatsApp Icon",
                             tint = Color.White,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(17.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "MINTA KEY VIA WHATSAPP",
+                            text = "BANTUAN LOGIN VIA WHATSAPP",
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 12.5.sp,
+                                fontSize = 12.sp,
                                 letterSpacing = 0.3.sp
                             )
                         )
@@ -646,7 +587,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "WhatsApp Admin: +62 878-3546-1585",
+                        text = "Admin Support: +62 878-3546-1585",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color(0xFF71717A),
                             fontSize = 10.sp

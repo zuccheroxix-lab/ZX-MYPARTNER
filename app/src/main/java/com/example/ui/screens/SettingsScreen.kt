@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
@@ -786,6 +787,58 @@ fun SettingsScreen(
                         fontSize = 11.sp,
                         lineHeight = 16.sp
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // CARD 7: LOGOUT SESI APLIKASI
+            SettingsCard {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEF4444).copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Logout",
+                                tint = Color(0xFFEF4444),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Keamanan Sesi", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                            Text("Kunci aplikasi dan hapus sesi login aktif", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = {
+                            authManager?.logout()
+                            Toast.makeText(context, "Sesi login berhasil dikeluarkan", Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFEF4444).copy(alpha = 0.2f),
+                            contentColor = Color(0xFFF87171)
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.6f)),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .testTag("btn_logout_app")
+                    ) {
+                        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("KELUAR / LOGOUT APLIKASI", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
                 }
             }
 

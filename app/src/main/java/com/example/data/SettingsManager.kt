@@ -6,10 +6,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class SettingsManager(context: Context) {
+class SettingsManager private constructor(context: Context) {
 
     private val prefs: SharedPreferences =
-        context.getSharedPreferences("zx_dashboard_prefs", Context.MODE_PRIVATE)
+        context.applicationContext.getSharedPreferences("zx_dashboard_prefs", Context.MODE_PRIVATE)
 
     private val _isDarkMode = MutableStateFlow(prefs.getBoolean(KEY_DARK_MODE, true))
     val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
@@ -98,6 +98,15 @@ class SettingsManager(context: Context) {
     private val _crosshairOffsetY = MutableStateFlow(prefs.getInt(KEY_CROSSHAIR_OFFSET_Y, 0))
     val crosshairOffsetY: StateFlow<Int> = _crosshairOffsetY.asStateFlow()
 
+    private val _crosshairThickness = MutableStateFlow(prefs.getFloat(KEY_CROSSHAIR_THICKNESS, 2.5f))
+    val crosshairThickness: StateFlow<Float> = _crosshairThickness.asStateFlow()
+
+    private val _crosshairAutoCenter = MutableStateFlow(prefs.getBoolean(KEY_CROSSHAIR_AUTO_CENTER, true))
+    val crosshairAutoCenter: StateFlow<Boolean> = _crosshairAutoCenter.asStateFlow()
+
+    private val _crosshairDragMode = MutableStateFlow(prefs.getBoolean(KEY_CROSSHAIR_DRAG_MODE, false))
+    val crosshairDragMode: StateFlow<Boolean> = _crosshairDragMode.asStateFlow()
+
     // Sensitivity GameLab Profile
     private val _sensitivityProfile = MutableStateFlow(
         prefs.getString(KEY_SENSITIVITY_PROFILE, "ESPORTS_PRO") ?: "ESPORTS_PRO"
@@ -119,6 +128,30 @@ class SettingsManager(context: Context) {
         prefs.getString(KEY_RENDER_MODE, "AUTO") ?: "AUTO"
     )
     val renderMode: StateFlow<String> = _renderMode.asStateFlow()
+
+    private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        when (key) {
+            KEY_DARK_MODE -> _isDarkMode.value = prefs.getBoolean(KEY_DARK_MODE, true)
+            KEY_ANIMATIONS -> _animationsEnabled.value = prefs.getBoolean(KEY_ANIMATIONS, true)
+            KEY_HAPTICS -> _hapticsEnabled.value = prefs.getBoolean(KEY_HAPTICS, true)
+            KEY_PERFORMANCE_MODE -> _performanceMode.value = prefs.getString(KEY_PERFORMANCE_MODE, "BALANCED") ?: "BALANCED"
+            KEY_ACCENT_COLOR -> _accentColor.value = prefs.getLong(KEY_ACCENT_COLOR, DEFAULT_ACCENT_COLOR)
+            KEY_CROSSHAIR_ENABLED -> _crosshairEnabled.value = prefs.getBoolean(KEY_CROSSHAIR_ENABLED, false)
+            KEY_CROSSHAIR_STYLE -> _crosshairStyle.value = prefs.getString(KEY_CROSSHAIR_STYLE, "CLASSIC_CROSS") ?: "CLASSIC_CROSS"
+            KEY_CROSSHAIR_SIZE -> _crosshairSize.value = prefs.getInt(KEY_CROSSHAIR_SIZE, 28)
+            KEY_CROSSHAIR_COLOR -> _crosshairColor.value = prefs.getLong(KEY_CROSSHAIR_COLOR, 0xFFFF2A2AL)
+            KEY_CROSSHAIR_OPACITY -> _crosshairOpacity.value = prefs.getFloat(KEY_CROSSHAIR_OPACITY, 0.9f)
+            KEY_CROSSHAIR_OFFSET_X -> _crosshairOffsetX.value = prefs.getInt(KEY_CROSSHAIR_OFFSET_X, 0)
+            KEY_CROSSHAIR_OFFSET_Y -> _crosshairOffsetY.value = prefs.getInt(KEY_CROSSHAIR_OFFSET_Y, 0)
+            KEY_CROSSHAIR_THICKNESS -> _crosshairThickness.value = prefs.getFloat(KEY_CROSSHAIR_THICKNESS, 2.5f)
+            KEY_CROSSHAIR_AUTO_CENTER -> _crosshairAutoCenter.value = prefs.getBoolean(KEY_CROSSHAIR_AUTO_CENTER, true)
+            KEY_CROSSHAIR_DRAG_MODE -> _crosshairDragMode.value = prefs.getBoolean(KEY_CROSSHAIR_DRAG_MODE, false)
+        }
+    }
+
+    init {
+        prefs.registerOnSharedPreferenceChangeListener(prefListener)
+    }
 
     // Mutator Methods
     fun setDarkMode(enabled: Boolean) {
@@ -227,6 +260,43 @@ class SettingsManager(context: Context) {
         _crosshairOffsetY.value = y
     }
 
+    fun setCrosshairThickness(thickness: Float) {
+        prefs.edit().putFloat(KEY_CROSSHAIR_THICKNESS, thickness).apply()
+        _crosshairThickness.value = thickness
+    }
+
+    fun setCrosshairAutoCenter(autoCenter: Boolean) {
+        prefs.edit().putBoolean(KEY_CROSSHAIR_AUTO_CENTER, autoCenter).apply()
+        _crosshairAutoCenter.value = autoCenter
+        if (autoCenter) {
+            setCrosshairOffset(0, 0)
+        }
+    }
+
+    fun setCrosshairDragMode(dragMode: Boolean) {
+        prefs.edit().putBoolean(KEY_CROSSHAIR_DRAG_MODE, dragMode).apply()
+        _crosshairDragMode.value = dragMode
+    }
+
+    fun resetCrosshairPosition() {
+        setCrosshairAutoCenter(true)
+        setCrosshairOffset(0, 0)
+        setCrosshairDragMode(false)
+    }
+
+    fun resetCrosshairStyle() {
+        setCrosshairStyle("CLASSIC_CROSS")
+        setCrosshairSize(28)
+        setCrosshairColor(0xFFFF2A2AL)
+        setCrosshairOpacity(0.9f)
+        setCrosshairThickness(2.5f)
+    }
+
+    fun resetCrosshair() {
+        resetCrosshairStyle()
+        resetCrosshairPosition()
+    }
+
     fun setSensitivityProfile(profile: String) {
         prefs.edit().putString(KEY_SENSITIVITY_PROFILE, profile).apply()
         _sensitivityProfile.value = profile
@@ -273,6 +343,17 @@ class SettingsManager(context: Context) {
     }
 
     companion object {
+        @Volatile
+        private var instance: SettingsManager? = null
+
+        operator fun invoke(context: Context): SettingsManager {
+            return instance ?: synchronized(this) {
+                instance ?: SettingsManager(context.applicationContext).also { instance = it }
+            }
+        }
+
+        fun getInstance(context: Context): SettingsManager = invoke(context)
+
         const val DEFAULT_ACCENT_COLOR = 0xFF00D2FFL
 
         private const val KEY_DARK_MODE = "pref_dark_mode"
@@ -299,6 +380,9 @@ class SettingsManager(context: Context) {
         private const val KEY_CROSSHAIR_OPACITY = "pref_crosshair_opacity"
         private const val KEY_CROSSHAIR_OFFSET_X = "pref_crosshair_offset_x"
         private const val KEY_CROSSHAIR_OFFSET_Y = "pref_crosshair_offset_y"
+        private const val KEY_CROSSHAIR_THICKNESS = "pref_crosshair_thickness"
+        private const val KEY_CROSSHAIR_AUTO_CENTER = "pref_crosshair_auto_center"
+        private const val KEY_CROSSHAIR_DRAG_MODE = "pref_crosshair_drag_mode"
         private const val KEY_SENSITIVITY_PROFILE = "pref_sensitivity_profile"
         private const val KEY_CALIBRATION_SCORE = "pref_calibration_score"
         private const val KEY_TOUCH_OPTIMIZATION = "pref_touch_optimization"

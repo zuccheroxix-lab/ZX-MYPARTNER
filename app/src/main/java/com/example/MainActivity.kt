@@ -34,6 +34,11 @@ class MainActivity : FragmentActivity() {
         // Apply saved smoothness, refresh rate, and window latency config
         smoothnessManager.applyToWindow(this, smoothnessManager.config.value)
 
+        // Restore active crosshair overlay if previously enabled and permission still granted
+        if (settingsManager.crosshairEnabled.value && android.provider.Settings.canDrawOverlays(this)) {
+            com.example.service.CrosshairService.start(this)
+        }
+
         setContent {
             val isDarkMode by settingsManager.isDarkMode.collectAsState()
             val accentColorLong by settingsManager.accentColor.collectAsState()

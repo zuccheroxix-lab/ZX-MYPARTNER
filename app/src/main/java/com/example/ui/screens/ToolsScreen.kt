@@ -95,6 +95,7 @@ import com.example.data.ImportedZipConfig
 import com.example.data.SettingsManager
 import com.example.service.CrosshairService
 import com.example.service.OverlayService
+import com.example.ui.components.CrosshairConfigSection
 import com.example.ui.theme.LocalAccentColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -611,124 +612,15 @@ fun ToolsScreen(
                     // TAB 2: CROSSHAIR RETICLE & GAMING HUD OVERLAY
                     ToolsCard {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            // Crosshair Section
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(Color(0xFFFF2A2A).copy(alpha = 0.15f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(Icons.Default.Speed, contentDescription = null, tint = Color(0xFFFF2A2A), modifier = Modifier.size(20.dp))
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column {
-                                        Text("Crosshair Aim Reticle", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                        Text("Titik bidik presisi permanen", color = Color(0xFF8E8E98), fontSize = 11.sp)
-                                    }
-                                }
+                            CrosshairConfigSection(settingsManager = settingsManager)
+                        }
+                    }
 
-                                Switch(
-                                    checked = isCrosshairRunning,
-                                    onCheckedChange = { enable ->
-                                        if (enable) {
-                                            if (!Settings.canDrawOverlays(context)) {
-                                                Toast.makeText(context, "Izin Overlay Diperlukan", Toast.LENGTH_SHORT).show()
-                                                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")).apply {
-                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                                }
-                                                context.startActivity(intent)
-                                            } else {
-                                                settingsManager.setCrosshairEnabled(true)
-                                                CrosshairService.start(context)
-                                            }
-                                        } else {
-                                            settingsManager.setCrosshairEnabled(false)
-                                            CrosshairService.stop(context)
-                                        }
-                                    },
-                                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFFFF2A2A))
-                                )
-                            }
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Reticle Preview Canvas Box
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(100.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFF0C0E14))
-                                    .border(0.8.dp, Color(0xFF1E2232), RoundedCornerShape(12.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Canvas(modifier = Modifier.size(80.dp)) {
-                                    val c = center
-                                    val effColor = crosshairColor.copy(alpha = crosshairOpacity)
-                                    val sizePx = (crosshairSize * density).coerceAtLeast(14f)
-                                    val half = sizePx / 2f
-
-                                    when (crosshairStyle) {
-                                        "DOT" -> drawCircle(color = effColor, radius = half.coerceIn(4f, 18f), center = c)
-                                        "CIRCLE_DOT" -> {
-                                            drawCircle(color = effColor, radius = half, center = c, style = Stroke(width = 2.5f))
-                                            drawCircle(color = effColor, radius = 3.5f, center = c)
-                                        }
-                                        "T_SHAPE" -> {
-                                            drawLine(effColor, Offset(c.x, c.y - half), Offset(c.x, c.y + 4f), strokeWidth = 3f)
-                                            drawLine(effColor, Offset(c.x - half, c.y), Offset(c.x + half, c.y), strokeWidth = 3f)
-                                        }
-                                        "SNIPER" -> {
-                                            drawCircle(effColor, half, c, style = Stroke(2f))
-                                            drawLine(effColor, Offset(c.x - half * 1.3f, c.y), Offset(c.x + half * 1.3f, c.y), 2f)
-                                            drawLine(effColor, Offset(c.x, c.y - half * 1.3f), Offset(c.x, c.y + half * 1.3f), 2f)
-                                            drawCircle(effColor, 3f, c)
-                                        }
-                                        else -> {
-                                            // Classic Cross
-                                            drawLine(effColor, Offset(c.x - half, c.y), Offset(c.x - 4f, c.y), 3f)
-                                            drawLine(effColor, Offset(c.x + 4f, c.y), Offset(c.x + half, c.y), 3f)
-                                            drawLine(effColor, Offset(c.x, c.y - half), Offset(c.x, c.y - 4f), 3f)
-                                            drawLine(effColor, Offset(c.x, c.y + 4f), Offset(c.x, c.y + half), 3f)
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            // Crosshair Styles
-                            val styles = listOf("CLASSIC", "DOT", "CIRCLE_DOT", "T_SHAPE", "SNIPER")
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                styles.forEach { st ->
-                                    val isSel = crosshairStyle == st
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(if (isSel) Color(0xFFFF2A2A).copy(alpha = 0.2f) else Color(0xFF171A24))
-                                            .border(0.8.dp, if (isSel) Color(0xFFFF2A2A) else Color(0xFF262A3B), RoundedCornerShape(8.dp))
-                                            .clickable { settingsManager.setCrosshairStyle(st) }
-                                            .padding(vertical = 6.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(st.replace("_", " "), color = if (isSel) Color(0xFFFF2A2A) else Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-                            HorizontalDivider(color = Color(0xFF22242E), thickness = 0.6.dp)
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Gaming HUD Row
+                    ToolsCard {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            // Gaming HUD Telemetry Row
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
