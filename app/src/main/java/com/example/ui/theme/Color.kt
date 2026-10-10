@@ -25,6 +25,13 @@ val StatusGreen = Color(0xFF10B981)
 val StatusAmber = Color(0xFFF59E0B)
 val StatusRed = Color(0xFFEF4444)
 
+// ZX Burgundy Dark Theme Accents
+val BurgundyPrimary = Color(0xFF881337)
+val BurgundyDeep = Color(0xFF4C0519)
+val BurgundyBright = Color(0xFFBE123C)
+val BurgundyGlow = Color(0xFFE11D48)
+val BurgundyBorder = Color(0xFF9F1239)
+
 // Typography
 val TextPrimary = Color(0xFFF8FAFC)
 val TextSecondary = Color(0xFF94A3B8)

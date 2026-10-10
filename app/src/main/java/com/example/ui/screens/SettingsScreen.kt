@@ -792,33 +792,66 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // CARD 7: LOGOUT SESI APLIKASI
+            // CARD 7: KEAMANAN & PENGATURAN LOGIN (Ubah PIN, Atur Pola, & Logout)
             SettingsCard {
+                var showChangePinDialog by remember { mutableStateOf(false) }
+                var showSetPatternDialog by remember { mutableStateOf(false) }
+                var newPinInput by remember { mutableStateOf("") }
+                var newPinConfirm by remember { mutableStateOf("") }
+                var pinChangeError by remember { mutableStateOf<String?>(null) }
+
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFEF4444).copy(alpha = 0.15f)),
+                                .background(Color(0xFF881337).copy(alpha = 0.25f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Logout",
-                                tint = Color(0xFFEF4444),
+                                imageVector = Icons.Default.Security,
+                                contentDescription = "Security Settings",
+                                tint = Color(0xFFFB7185),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Keamanan Sesi", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
-                            Text("Kunci aplikasi dan hapus sesi login aktif", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                            Text("Keamanan & Autentikasi ZX", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                            Text("Kelola PIN aplikasi, pola 3×3, atau akhiri sesi login", color = Color(0xFF8E8E98), fontSize = 11.sp)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
+                    // Row: [ GANTI PIN ] [ ATUR POLA ]
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showChangePinDialog = true },
+                            modifier = Modifier.weight(1f).testTag("btn_settings_change_pin"),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFF0284C7).copy(alpha = 0.7f))
+                        ) {
+                            Text("Ganti PIN", color = Color(0xFF38BDF8), fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        OutlinedButton(
+                            onClick = { showSetPatternDialog = true },
+                            modifier = Modifier.weight(1f).testTag("btn_settings_change_pattern"),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFFBE123C).copy(alpha = 0.7f))
+                        ) {
+                            Text(if (authManager?.hasPatternSet() == true) "Ubah Pola" else "Atur Pola", color = Color(0xFFFB7185), fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Logout Button
                     Button(
                         onClick = {
                             authManager?.logout()
@@ -839,6 +872,87 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("KELUAR / LOGOUT APLIKASI", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
+                }
+
+                // Dialog Ganti PIN
+                if (showChangePinDialog) {
+                    androidx.compose.material3.AlertDialog(
+                        onDismissRequest = {
+                            showChangePinDialog = false
+                            newPinInput = ""
+                            newPinConfirm = ""
+                            pinChangeError = null
+                        },
+                        title = { Text("Ganti PIN Aplikasi", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp) },
+                        text = {
+                            Column {
+                                Text("Masukkan 4 digit PIN baru untuk aplikasi ZX:", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = newPinInput,
+                                    onValueChange = { if (it.length <= 8) newPinInput = it },
+                                    label = { Text("PIN Baru") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth().testTag("input_new_pin")
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                OutlinedTextField(
+                                    value = newPinConfirm,
+                                    onValueChange = { if (it.length <= 8) newPinConfirm = it },
+                                    label = { Text("Ulangi PIN Baru") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth().testTag("input_confirm_pin")
+                                )
+                                if (pinChangeError != null) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(pinChangeError ?: "", color = Color(0xFFF87171), fontSize = 11.sp)
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    if (newPinInput.length < 4) {
+                                        pinChangeError = "PIN minimal 4 digit angka."
+                                    } else if (newPinInput != newPinConfirm) {
+                                        pinChangeError = "PIN konfirmasi tidak sama."
+                                    } else {
+                                        authManager?.setCustomPin(newPinInput)
+                                        Toast.makeText(context, "PIN aplikasi berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                                        showChangePinDialog = false
+                                        newPinInput = ""
+                                        newPinConfirm = ""
+                                        pinChangeError = null
+                                    }
+                                }
+                            ) { Text("Simpan PIN") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showChangePinDialog = false }) { Text("Batal") }
+                        }
+                    )
+                }
+
+                // Dialog Atur Pola
+                if (showSetPatternDialog) {
+                    androidx.compose.material3.AlertDialog(
+                        onDismissRequest = { showSetPatternDialog = false },
+                        title = { Text("Pengaturan Pola 3×3", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp) },
+                        text = {
+                            Text("Untuk menggambar atau memperbarui pola, logout ke layar login lalu pilih tombol 'POLA LOGIN' → 'Buat Pola Baru' untuk menghubungkan titik secara interaktif.", color = Color(0xFFCBD5E1), fontSize = 12.5.sp, lineHeight = 17.sp)
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    authManager?.logout()
+                                    showSetPatternDialog = false
+                                }
+                            ) { Text("Buka Layar Pola Sekarang") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showSetPatternDialog = false }) { Text("Tutup") }
+                        }
+                    )
                 }
             }
 

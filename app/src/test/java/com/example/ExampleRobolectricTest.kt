@@ -202,4 +202,47 @@ class ExampleRobolectricTest {
 
     authManager.logout()
   }
+
+  @Test
+  fun `verify pattern creation, verification and custom PIN update`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val authManager = AuthManager(context)
+
+    authManager.logout()
+    assertFalse(authManager.isAuthenticated.value)
+
+    // Test default Z-pattern before custom pattern is set: (0, 1, 2, 4, 6, 7, 8)
+    val defaultPattern = listOf(0, 1, 2, 4, 6, 7, 8)
+    assertTrue(authManager.verifyPattern(defaultPattern))
+    assertTrue(authManager.isAuthenticated.value)
+    assertEquals("PATTERN", authManager.lastAuthMethod.value)
+
+    authManager.logout()
+
+    // Wrong pattern rejected
+    val wrongPattern = listOf(0, 3, 6, 7)
+    assertFalse(authManager.verifyPattern(wrongPattern))
+    assertFalse(authManager.isAuthenticated.value)
+
+    // Configure new custom pattern
+    val newPattern = listOf(0, 4, 8, 5, 2)
+    assertTrue(authManager.setPattern(newPattern))
+    assertTrue(authManager.hasPatternSet())
+
+    // Old default pattern now rejected
+    assertFalse(authManager.verifyPattern(defaultPattern))
+    // New pattern accepted
+    assertTrue(authManager.verifyPattern(newPattern))
+    assertTrue(authManager.isAuthenticated.value)
+
+    authManager.logout()
+
+    // Test changing PIN
+    assertTrue(authManager.setCustomPin("8899"))
+    assertFalse(authManager.verifyPin("6745")) // old pin replaced
+    assertTrue(authManager.verifyPin("8899")) // new custom pin works
+    assertTrue(authManager.isAuthenticated.value)
+
+    authManager.logout()
+  }
 }

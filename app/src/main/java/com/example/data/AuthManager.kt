@@ -102,8 +102,68 @@ class AuthManager(private val context: Context) {
     }
 
     /**
+     * Checks if user has configured a custom pattern.
+     */
+    fun hasPatternSet(): Boolean {
+        return prefs.contains(KEY_PATTERN_HASH)
+    }
+
+    /**
+     * Sets or updates the 3x3 pattern.
+     * Pattern string is sequence of points e.g. "0,1,2,4,6,7,8".
+     * Stored as SHA-256 hash so raw pattern is never kept in plain text.
+     */
+    fun setPattern(patternPoints: List<Int>): Boolean {
+        if (patternPoints.size < 4) return false
+        val patternString = patternPoints.joinToString(",")
+        val hash = sha256("ZX_PATTERN_$patternString")
+        prefs.edit().putString(KEY_PATTERN_HASH, hash).apply()
+        return true
+    }
+
+    /**
+     * Verifies the 3x3 pattern input.
+     */
+    fun verifyPattern(patternPoints: List<Int>): Boolean {
+        if (isLockedOut()) return false
+        if (patternPoints.size < 4) return false
+
+        val patternString = patternPoints.joinToString(",")
+        val hash = sha256("ZX_PATTERN_$patternString")
+        val savedHash = prefs.getString(KEY_PATTERN_HASH, null)
+
+        val isValid = if (savedHash != null) {
+            hash == savedHash
+        } else {
+            // If no custom pattern set yet, accept default Z-pattern (0,1,2,4,6,7,8) for quick start
+            val defaultZHash = sha256("ZX_PATTERN_0,1,2,4,6,7,8")
+            hash == defaultZHash
+        }
+
+        if (isValid) {
+            resetFailedAttempts()
+            setAuthenticated(true, method = "PATTERN")
+            return true
+        } else {
+            recordFailedAttempt()
+            return false
+        }
+    }
+
+    /**
+     * Updates the custom App PIN.
+     * Stored as SHA-256 hash so raw PIN is never stored in plaintext.
+     */
+    fun setCustomPin(newPin: String): Boolean {
+        if (newPin.length < 4) return false
+        val hash = sha256(newPin.trim())
+        prefs.edit().putString(KEY_CUSTOM_PIN_HASH, hash).apply()
+        return true
+    }
+
+    /**
      * Verifies the app PIN.
-     * Official App PIN: 6745.
+     * Official App PIN: 6745 (or custom PIN if changed by user).
      * Uses SHA-256 hash comparison so PIN is never stored or compared in plain text.
      * Implements lockout rate limiting after 5 failed attempts.
      */
@@ -119,7 +179,12 @@ class AuthManager(private val context: Context) {
         val trimmed = inputPin.trim()
         val hash = sha256(trimmed)
 
-        val isValid = (hash == APP_PIN_HASH) || VALID_LEGACY_HASHES.contains(hash)
+        val customPinHash = prefs.getString(KEY_CUSTOM_PIN_HASH, null)
+        val isValid = if (customPinHash != null) {
+            hash == customPinHash
+        } else {
+            (hash == APP_PIN_HASH) || VALID_LEGACY_HASHES.contains(hash)
+        }
 
         if (isValid) {
             // Reset failed attempts on success
@@ -273,6 +338,8 @@ class AuthManager(private val context: Context) {
         private const val KEY_ENCRYPTED_IV = "auth_enc_iv"
         private const val KEY_FAILED_ATTEMPTS = "auth_failed_attempts"
         private const val KEY_LOCKOUT_UNTIL = "auth_lockout_until"
+        private const val KEY_PATTERN_HASH = "auth_pattern_hash"
+        private const val KEY_CUSTOM_PIN_HASH = "auth_custom_pin_hash"
 
         private const val KEYSTORE_PROVIDER = "AndroidKeyStore"
         private const val KEY_ALIAS = "ZX_APP_AUTH_KEY_2026"
