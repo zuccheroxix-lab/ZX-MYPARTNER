@@ -79,7 +79,7 @@ import com.example.ui.theme.BurgundyPrimary
 import kotlinx.coroutines.delay
 
 /**
- * ZX FF OPTIMIZER — 3 QUICK LOGIN BUTTONS
+ * DYNIMETIZE ZX — 3 QUICK LOGIN BUTTONS
  *
  * Distinct Architecture:
  * 1. METHOD_SELECTION: Tiga tombol utama premium (PIN LOGIN, POLA LOGIN, SIDIK JARI)
@@ -165,7 +165,7 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // BRAND & TITLE: "ZX FF OPTIMIZER"
+            // BRAND & TITLE: "DYNIMETIZE ZX"
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(top = 28.dp, bottom = 10.dp)
@@ -196,13 +196,14 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "ZX FF OPTIMIZER",
+                    text = "DYNIMETIZE ZX",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         color = Color.White,
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize = 22.sp,
-                        letterSpacing = 1.8.sp
-                    )
+                        fontSize = 21.sp,
+                        letterSpacing = 2.0.sp
+                    ),
+                    maxLines = 1
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
