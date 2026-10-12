@@ -2,6 +2,9 @@ name: Build & Release APKs
 
 on:
   push:
+    branches:
+      - main
+      - master
     tags:
       - 'v*'
   workflow_dispatch:
@@ -59,15 +62,15 @@ jobs:
           name: app-release
           path: releases/*.apk
 
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Publish or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.2.0' }}
+          name: DYNIMETIZE ZX ${{ github.ref_type == 'tag' && github.ref_name || 'v2.2.0' }}
           files: |
             releases/DYNIMETIZE_ZX-v2.2.0-release.apk
             releases/app-release.apk
             releases/app-debug.apk
-          name: DYNIMETIZE ZX ${{ github.ref_name }}
           body_path: CHANGELOG.md
           draft: false
           prerelease: false
