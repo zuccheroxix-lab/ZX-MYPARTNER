@@ -8,6 +8,7 @@ import android.os.Build
 import android.provider.Settings
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -554,57 +555,95 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 8. Rilis APK Terbaru
+        // 8. Rilis APK Terbaru (Debug & Release)
         HomeSectionCard {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(14.dp)
             ) {
-                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFFB300).copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Download,
-                            contentDescription = null,
-                            tint = Color(0xFFFFB300),
-                            modifier = Modifier.size(18.dp)
-                        )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFFB300).copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = null,
+                                tint = Color(0xFFFFB300),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text("Rilis APK Terbaru", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text(
+                                text = "v${Config.DEFAULT_VERSION_NAME.replace(" (release)", "")} (Build ${Config.VERSION_CODE})",
+                                color = Color(0xFF10B981),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text("Rilis APK Terbaru", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                        Text(
-                            text = "v${Config.DEFAULT_VERSION_NAME.replace(" (release)", "")} (Build ${Config.VERSION_CODE})",
-                            color = Color(0xFF10B981),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+
+                    Button(
+                        onClick = {
+                            LinkHandler.openUrl(context, Config.APK_DOWNLOAD_URL)
+                            Toast.makeText(context, "Membuka download ${Config.APK_FILENAME}...", Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFB300),
+                            contentColor = Color(0xFF0A0B0F)
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.testTag("home_btn_download_apk")
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("RELEASE APK", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
                     }
                 }
 
-                Button(
-                    onClick = {
-                        LinkHandler.openUrl(context, Config.APK_DOWNLOAD_URL)
-                        Toast.makeText(context, "Membuka download ${Config.APK_FILENAME}...", Toast.LENGTH_SHORT).show()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFB300),
-                        contentColor = Color(0xFF0A0B0F)
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.testTag("home_btn_download_apk")
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("DOWNLOAD APK", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                    OutlinedButton(
+                        onClick = {
+                            LinkHandler.openUrl(context, Config.APK_DEBUG_DOWNLOAD_URL)
+                            Toast.makeText(context, "Membuka download ${Config.APK_DEBUG_FILENAME}...", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("home_btn_download_debug_apk"),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(0.8.dp, Color(0xFF38BDF8).copy(alpha = 0.6f))
+                    ) {
+                        Text("DEBUG APK (~32 MB)", color = Color(0xFF38BDF8), fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            LinkHandler.openUrl(context, Config.GITHUB_RELEASES_URL)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("home_btn_open_github_release"),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(0.8.dp, Color(0xFF2E3244))
+                    ) {
+                        Text("GitHub Releases", color = Color(0xFFE2E8F0), fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DYNIMETIZE ZX - Download Release APK v2.2.0</title>
+  <title>DYNIMETIZE ZX - Download Center & Project Overview</title>
   <style>
     :root {
       --bg-color: #08090C;
@@ -13,7 +13,8 @@
       --gold-glow: rgba(255, 179, 0, 0.35);
       --green: #00E676;
       --green-glow: rgba(0, 230, 118, 0.35);
-      --cyan: #00D2FF;
+      --cyan: #38BDF8;
+      --cyan-glow: rgba(56, 189, 248, 0.35);
       --text: #F0F2F5;
       --text-dim: #9E9E98;
       --border: rgba(255, 179, 0, 0.3);
@@ -38,12 +39,12 @@
       padding: 20px;
       background-image: 
         radial-gradient(circle at 50% 10%, rgba(255, 179, 0, 0.12) 0%, transparent 60%),
-        radial-gradient(circle at 80% 80%, rgba(255, 143, 0, 0.08) 0%, transparent 50%);
+        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.08) 0%, transparent 50%);
     }
 
     .container {
       width: 100%;
-      max-width: 600px;
+      max-width: 640px;
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 18px;
@@ -61,7 +62,7 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, transparent, var(--gold), var(--amber), transparent);
+      background: linear-gradient(90deg, transparent, var(--gold), var(--cyan), transparent);
     }
 
     .badge-status {
@@ -86,56 +87,58 @@
       height: 8px;
       background-color: var(--green);
       border-radius: 50%;
+      box-shadow: 0 0 8px var(--green);
       animation: pulse 1.5s infinite;
     }
 
     @keyframes pulse {
-      0% { transform: scale(0.9); opacity: 0.7; }
-      50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 8px var(--green); }
-      100% { transform: scale(0.9); opacity: 0.7; }
+      0% { opacity: 0.4; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.4; transform: scale(0.9); }
     }
 
     h1 {
       font-size: 26px;
       font-weight: 800;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
       color: #FFFFFF;
       margin-bottom: 6px;
-      text-shadow: 0 0 20px rgba(255, 179, 0, 0.4);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     }
 
     .subtitle {
-      font-size: 13px;
-      color: var(--text-dim);
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 600;
       margin-bottom: 20px;
+      letter-spacing: 0.5px;
     }
 
-    .apk-card {
-      background: rgba(10, 11, 15, 0.95);
-      border: 1px solid rgba(255, 179, 0, 0.28);
-      border-radius: 14px;
-      padding: 18px;
+    .overview-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px;
       margin-bottom: 20px;
       text-align: left;
     }
 
-    .apk-filename {
-      font-family: monospace;
-      font-size: 14px;
-      color: var(--gold);
+    .overview-title {
+      font-size: 13px;
       font-weight: 700;
-      word-break: break-all;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
       margin-bottom: 12px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .meta-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
-      font-size: 12px;
     }
 
     .meta-item {
@@ -144,90 +147,100 @@
     }
 
     .meta-label {
-      color: var(--text-dim);
       font-size: 11px;
+      color: var(--text-dim);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 2px;
     }
 
     .meta-value {
-      color: #FFFFFF;
+      font-size: 13px;
       font-weight: 600;
+      color: #FFFFFF;
     }
 
-    .btn-download {
-      display: inline-flex;
+    .download-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .btn-download-main {
+      display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       width: 100%;
-      padding: 16px 24px;
-      background: linear-gradient(135deg, #FFB300 0%, #FF8F00 100%);
-      color: #0A0B0F;
-      font-size: 17px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      padding: 14px 16px;
       border: none;
       border-radius: 12px;
+      font-size: 14px;
+      font-weight: 800;
       cursor: pointer;
       text-decoration: none;
-      box-shadow: 0 6px 20px rgba(255, 179, 0, 0.4);
       transition: all 0.2s ease;
     }
 
-    .btn-download:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(255, 179, 0, 0.6);
-      background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%);
+    .btn-release {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--amber) 100%);
+      color: #0A0B0F;
+      box-shadow: 0 4px 20px var(--gold-glow);
     }
 
-    .btn-download:active {
-      transform: translateY(1px);
+    .btn-release:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(255, 179, 0, 0.5);
+    }
+
+    .btn-debug {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1.5px solid var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 4px 15px var(--cyan-glow);
+    }
+
+    .btn-debug:hover {
+      background: rgba(56, 189, 248, 0.25);
+      transform: translateY(-2px);
     }
 
     .btn-secondary-group {
       display: flex;
+      justify-content: center;
       gap: 10px;
-      margin-top: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
 
     .btn-secondary {
-      flex: 1;
-      padding: 11px 14px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       color: var(--text);
-      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12px;
       font-weight: 600;
-      cursor: pointer;
       text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.2s ease;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.1);
       border-color: var(--gold);
       color: var(--gold);
     }
 
     .status-box {
-      margin-top: 18px;
-      padding: 14px;
-      border-radius: 10px;
       background: rgba(0, 230, 118, 0.08);
       border: 1px solid rgba(0, 230, 118, 0.3);
-      color: var(--green);
-      font-size: 14px;
-      font-weight: 700;
+      color: #E2E8F0;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-bottom: 20px;
       display: none;
-      animation: fadeIn 0.3s ease;
     }
 
     .progress-bar-container {
@@ -242,82 +255,58 @@
     .progress-bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, var(--gold), var(--amber));
-      transition: width 0.1s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-5px); }
-      to { opacity: 1; transform: translateY(0); }
+      background: var(--gold);
+      transition: width 0.1s linear;
     }
 
     .info-section {
-      margin-top: 20px;
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 16px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 10px;
+      padding: 14px;
       text-align: left;
       font-size: 12px;
       color: var(--text-dim);
-      line-height: 1.6;
-    }
-
-    .info-title {
-      color: var(--gold);
-      font-weight: 700;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .info-list {
-      padding-left: 18px;
-    }
-
-    .info-list li {
-      margin-bottom: 4px;
+      margin-left: 20px;
+      margin-top: 8px;
+      line-height: 1.6;
     }
 
     .checksum-box {
-      margin-top: 12px;
-      padding: 10px;
-      background: rgba(0,0,0,0.6);
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: #0D0E13;
       border-radius: 6px;
+      border: 1px dashed rgba(255, 255, 255, 0.15);
       font-family: monospace;
-      font-size: 11px;
-      color: var(--text-dim);
+      font-size: 10.5px;
+      color: #A0A5B5;
       word-break: break-all;
-    }
-
-    .checksum-label {
-      color: var(--gold);
-      font-weight: 700;
-      margin-bottom: 2px;
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <div id="badgeStatus" class="badge-status">
-      <span class="pulse-dot"></span>
-      <span id="badgeText">APK RELEASE v2.2.0 READY</span>
+    <div class="badge-status">
+      <div class="pulse-dot"></div>
+      <span id="badgeText">BUILD ARTIFACTS VERIFIED & READY</span>
     </div>
 
     <h1>DYNIMETIZE ZX</h1>
-    <p class="subtitle">Official Release Binary • Developer: ZUCCHERO XANN (ZX-DEV-001)</p>
+    <div class="subtitle">Official Release Center & Project Overview • v2.2.0</div>
 
-    <div class="apk-card">
-      <div class="apk-filename">
-        <span>📦</span>
-        <span id="apkNameDisplay">DYNIMETIZE_ZX-v2.2.0-release.apk</span>
+    <!-- Project Overview -->
+    <div class="overview-card">
+      <div class="overview-title">
+        <span>📋</span> Project Overview & Build Status
       </div>
-
       <div class="meta-grid">
         <div class="meta-item">
-          <span class="meta-label">Package Name</span>
+          <span class="meta-label">Application ID</span>
           <span class="meta-value">com.aistudio.zxdashboard.zxapp</span>
         </div>
         <div class="meta-item">
@@ -325,53 +314,55 @@
           <span class="meta-value" id="metaVersion">v2.2.0 (Build 220)</span>
         </div>
         <div class="meta-item">
-          <span class="meta-label">File Size</span>
-          <span class="meta-value" id="metaSize">Menghitung...</span>
+          <span class="meta-label">APK Release Size</span>
+          <span class="meta-value" id="metaReleaseSize">26.1 MB (26,105,966 B)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">APK Debug Size</span>
+          <span class="meta-value" id="metaDebugSize">33.1 MB (33,139,696 B)</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Signature</span>
           <span class="meta-value">Scheme v2 (Developer Signed)</span>
         </div>
         <div class="meta-item">
-          <span class="meta-label">Target SDK</span>
-          <span class="meta-value">Android 16 (API 36)</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">Min SDK</span>
-          <span class="meta-value">Android 7.0 (API 24+)</span>
+          <span class="meta-label">Target / Min SDK</span>
+          <span class="meta-value">Android 16 (API 36) / Android 7.0 (API 24+)</span>
         </div>
       </div>
     </div>
 
-    <!-- Feature Update Badges (Clean 4-Nav Structure) -->
-    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:18px;">
-      <span style="background:rgba(255,179,0,0.18); border:1px solid #FFB300; color:#FDE047; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">🏠 HOME: Dashboard & Telemetry</span>
-      <span style="background:rgba(56,189,248,0.18); border:1px solid #38BDF8; color:#BAE6FD; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">🎮 GAME: Space & Sensitivity</span>
-      <span style="background:rgba(16,185,129,0.18); border:1px solid #10B981; color:#A7F3D0; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">🛠 TOOLS: DPI, Res & Crosshair</span>
-      <span style="background:rgba(167,139,250,0.18); border:1px solid #A78BFA; color:#DDD6FE; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">⚙ SETTINGS: Shizuku & Feedback</span>
-      <span style="background:rgba(236,72,153,0.18); border:1px solid #EC4899; color:#F472B6; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:700;">📨 Real Feedback Engine</span>
-    </div>
+    <!-- Main Dual Action: Release & Debug Downloads -->
+    <div class="download-grid">
+      <button id="downloadReleaseBtn" class="btn-download-main btn-release" onclick="startDownload('release')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>APK RELEASE (25MB)</span>
+      </button>
 
-    <!-- Main Download Action Button -->
-    <button id="downloadBtn" class="btn-download" onclick="startDownload()">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-        <polyline points="7 10 12 15 17 10"></polyline>
-        <line x1="12" y1="15" x2="12" y2="3"></line>
-      </svg>
-      DOWNLOAD APK TERBARU
-    </button>
+      <button id="downloadDebugBtn" class="btn-download-main btn-debug" onclick="startDownload('debug')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>APK DEBUG (33MB)</span>
+      </button>
+    </div>
 
     <!-- Secondary Alternatives -->
     <div class="btn-secondary-group">
       <a class="btn-secondary" href="https://github.com/zuccheroxann/zx-dashboard/releases/latest" target="_blank">
         🐙 GitHub Release
       </a>
-      <button class="btn-secondary" onclick="copyDownloadUrl()">
-        📋 Salin Link APK
+      <button class="btn-secondary" onclick="copyLink('release')">
+        📋 Salin Link Release
       </button>
-      <button class="btn-secondary" onclick="openDirectTab()">
-        🌐 Tab Baru
+      <button class="btn-secondary" onclick="copyLink('debug')">
+        📋 Salin Link Debug
       </button>
     </div>
 
@@ -379,43 +370,40 @@
     <div id="statusBox" class="status-box"></div>
 
     <div class="info-section">
-      <div class="info-title">
-        <span>💡</span> Verifikasi & Alternatif Download:
+      <div class="overview-title" style="margin-bottom:6px; font-size:12px;">
+        <span>💡</span> Verifikasi & Panduan Akses File:
       </div>
       <ol class="info-list">
-        <li>Klik tombol emas <strong>DOWNLOAD APK TERBARU</strong> di atas untuk mengunduh versi v2.2.0 langsung.</li>
-        <li>Buka <strong>File Explorer</strong> di panel sebelah kiri editor AI Studio, masuk ke folder <strong><code>releases/</code></strong> lalu klik kanan <strong><code>DYNIMETIZE_ZX-v2.2.0-release.apk</code></strong> &gt; Download.</li>
-        <li>Atau kunjungi repository resmi di <strong><a href="https://github.com/zuccheroxann/zx-dashboard/releases/latest" target="_blank" style="color:var(--gold);text-decoration:none;">GitHub Releases</a></strong>.</li>
+        <li><strong>APK Release</strong>: Siap instal untuk pengguna umum/gaming tanpa debug flags.</li>
+        <li><strong>APK Debug</strong>: Menyertakan logcat & debugging flags untuk inspeksi developer.</li>
+        <li>Akses langsung di File Explorer AI Studio: Folder <code>releases/</code> &gt; klik kanan <code>DYNIMETIZE_ZX-v2.2.0-release.apk</code> atau <code>DYNIMETIZE_ZX-v2.2.0-debug.apk</code> &gt; <em>Download</em>.</li>
       </ol>
-
       <div class="checksum-box">
-        <div class="checksum-label">SHA-256 Checksum:</div>
-        <span id="checksumDisplay">Menghitung...</span>
+        <strong>SHA-256 Release:</strong> <span id="checksumRelease">828cbb1afdf7ada55953e764090f1d1309a12bf94ef4048137efa9b835d56c56</span><br>
+        <strong>SHA-256 Debug:</strong> <span id="checksumDebug">f3af9ddc50a8f1ed95dbd4ee06c6c22fc378852f4755a876cd6bbd7513fc43a1</span>
       </div>
     </div>
   </div>
 
   <script>
-    const APK_FILENAME = 'DYNIMETIZE_ZX-v2.2.0-release.apk';
-    const APK_URL = '/' + APK_FILENAME;
+    const RELEASE_URL = '/DYNIMETIZE_ZX-v2.2.0-release.apk';
+    const DEBUG_URL = '/DYNIMETIZE_ZX-v2.2.0-debug.apk';
     const statusBox = document.getElementById('statusBox');
 
-    // Fetch dynamic status from server API
     async function loadStatus() {
       try {
-        const res = await fetch('/api/status');
+        const res = await fetch('/api/overview');
         if (res.ok) {
           const data = await res.json();
-          if (data.size > 0) {
-            const mb = (data.size / (1024 * 1024)).toFixed(2);
-            document.getElementById('metaSize').innerText = `${data.size.toLocaleString()} bytes (~${mb} MB)`;
+          if (data.releaseApk && data.releaseApk.size > 0) {
+            const mb = (data.releaseApk.size / (1024 * 1024)).toFixed(1);
+            document.getElementById('metaReleaseSize').innerText = `${mb} MB (${data.releaseApk.size.toLocaleString()} B)`;
+            if (data.releaseApk.sha256) document.getElementById('checksumRelease').innerText = data.releaseApk.sha256;
           }
-          if (data.sha256) {
-            document.getElementById('checksumDisplay').innerText = data.sha256;
-          }
-          if (data.version) {
-            document.getElementById('metaVersion').innerText = `v${data.version} (Build ${data.versionCode})`;
-            document.getElementById('badgeText').innerText = `APK RELEASE v${data.version} READY`;
+          if (data.debugApk && data.debugApk.size > 0) {
+            const mb = (data.debugApk.size / (1024 * 1024)).toFixed(1);
+            document.getElementById('metaDebugSize').innerText = `${mb} MB (${data.debugApk.size.toLocaleString()} B)`;
+            if (data.debugApk.sha256) document.getElementById('checksumDebug').innerText = data.debugApk.sha256;
           }
         }
       } catch (e) {
@@ -424,32 +412,24 @@
     }
     loadStatus();
 
-    function openDirectTab() {
-      const fullUrl = window.location.origin + APK_URL;
-      window.open(fullUrl, '_blank');
-      showDownloadComplete();
-    }
-
-    function copyDownloadUrl() {
-      const fullUrl = window.location.origin + APK_URL;
-      navigator.clipboard.writeText(fullUrl).then(() => {
+    function copyLink(type) {
+      const url = window.location.origin + (type === 'debug' ? DEBUG_URL : RELEASE_URL);
+      navigator.clipboard.writeText(url).then(() => {
         statusBox.style.display = 'block';
-        statusBox.innerHTML = '📋 <strong>Link berhasil disalin ke clipboard!</strong><br><span style="font-size:12px;color:#bbb;">' + fullUrl + '</span>';
+        statusBox.innerHTML = `📋 <strong>Link ${type.toUpperCase()} berhasil disalin:</strong><br><span style="font-size:12px;color:#bbb;">${url}</span>`;
       }).catch(() => {
-        prompt("Salin link download berikut:", fullUrl);
+        prompt(`Salin link download ${type}:`, url);
       });
     }
 
-    function showDownloadComplete() {
-      statusBox.style.display = 'block';
-      statusBox.innerHTML = '✅ <strong>APK RELEASE v2.2.0 SIAP</strong><br><span style="font-size:15px;">DOWNLOAD SELESAI & TERVERIFIKASI</span>';
-    }
+    async function startDownload(type) {
+      const targetUrl = type === 'debug' ? DEBUG_URL : RELEASE_URL;
+      const filename = type === 'debug' ? 'DYNIMETIZE_ZX-v2.2.0-debug.apk' : 'DYNIMETIZE_ZX-v2.2.0-release.apk';
 
-    async function startDownload() {
       statusBox.style.display = 'block';
       statusBox.innerHTML = `
         <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-          <span>⏳ Mengunduh ${APK_FILENAME}...</span>
+          <span>⏳ Mengunduh ${filename}...</span>
           <span id="percentText">0%</span>
         </div>
         <div class="progress-bar-container">
@@ -458,11 +438,10 @@
       `;
 
       try {
-        const response = await fetch(APK_URL);
+        const response = await fetch(targetUrl);
         if (!response.ok) throw new Error('HTTP ' + response.status);
-
         const contentLength = response.headers.get('content-length');
-        const total = contentLength ? parseInt(contentLength, 10) : 25000000;
+        const total = contentLength ? parseInt(contentLength, 10) : 26000000;
         const reader = response.body.getReader();
         const chunks = [];
         let received = 0;
@@ -472,7 +451,6 @@
           if (done) break;
           chunks.push(value);
           received += value.length;
-
           if (total) {
             const pct = Math.min(100, Math.round((received / total) * 100));
             const pBar = document.getElementById('progressBar');
@@ -486,25 +464,24 @@
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
-        a.download = APK_FILENAME;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
-
         setTimeout(() => {
           URL.revokeObjectURL(blobUrl);
           document.body.removeChild(a);
         }, 2000);
 
-        showDownloadComplete();
+        statusBox.innerHTML = `✅ <strong>${filename} SIAP</strong><br><span style="font-size:14px;">DOWNLOAD SELESAI & TERVERIFIKASI</span>`;
       } catch (err) {
-        console.warn('Stream download failed, using direct anchor fallback:', err);
+        console.warn('Stream failed, fallback direct:', err);
         const a = document.createElement('a');
-        a.href = APK_URL;
-        a.download = APK_FILENAME;
+        a.href = targetUrl;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        showDownloadComplete();
+        statusBox.innerHTML = `✅ <strong>${filename} TERUNDUH</strong>`;
       }
     }
   </script>

@@ -699,23 +699,47 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    Button(
-                        onClick = {
-                            LinkHandler.openUrl(context, Config.APK_DOWNLOAD_URL)
-                            Toast.makeText(context, "Membuka download ${Config.APK_FILENAME}...", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("btn_download_latest_apk"),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFB300),
-                            contentColor = Color(0xFF0A0B0F)
-                        ),
-                        shape = RoundedCornerShape(12.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("DOWNLOAD APK TERBARU", fontWeight = FontWeight.ExtraBold, fontSize = 12.5.sp)
+                        Button(
+                            onClick = {
+                                LinkHandler.openUrl(context, Config.APK_DOWNLOAD_URL)
+                                Toast.makeText(context, "Membuka download ${Config.APK_FILENAME}...", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier
+                                .weight(1.2f)
+                                .testTag("btn_download_latest_apk"),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFFFB300),
+                                contentColor = Color(0xFF0A0B0F)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("RELEASE APK (25MB)", fontWeight = FontWeight.ExtraBold, fontSize = 11.5.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                LinkHandler.openUrl(context, Config.APK_DEBUG_DOWNLOAD_URL)
+                                Toast.makeText(context, "Membuka download ${Config.APK_DEBUG_FILENAME}...", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("btn_download_debug_apk"),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFF38BDF8)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.7f))
+                        ) {
+                            Icon(Icons.Default.Download, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("DEBUG APK", fontWeight = FontWeight.Bold, fontSize = 11.5.sp)
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
