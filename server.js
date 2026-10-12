@@ -178,8 +178,8 @@ const server = http.createServer((req, res) => {
         versionCode: 220,
         developer: 'ZUCCHERO XANN',
         developerId: 'ZX-DEV-001',
-        githubRepo: 'https://github.com/zuccheroxann/zx-dashboard',
-        githubReleaseUrl: 'https://github.com/zuccheroxann/zx-dashboard/releases/latest',
+        githubRepo: 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER',
+        githubReleaseUrl: 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/latest',
         releaseApk: {
           filename: RELEASE_APK_FILENAME,
           exists: releaseExists,

@@ -1,18 +1,21 @@
 # DYNIMETIZE ZX
 
-**DYNIMETIZE ZX** is a modern, high-performance Android Gaming & Telemetry Dashboard engineered for mobile gamers, power users, and system enthusiasts. Built with Jetpack Compose and Material 3, it integrates real-time system telemetry, in-game floating Gaming HUD overlay, deep hardware diagnostics, Game Space optimization profiles, plugin management, and Shizuku ADB-level service integration.
+[![Build & Release APKs](https://github.com/zuccheroxix-lab/ZX-MYPARTNER/actions/workflows/release.yml/badge.svg)](https://github.com/zuccheroxix-lab/ZX-MYPARTNER/actions/workflows/release.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/zuccheroxix-lab/ZX-MYPARTNER?color=FFB300&label=Release)](https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/latest)
+
+**DYNIMETIZE ZX** is a modern, high-performance Android Gaming & Telemetry Dashboard engineered for mobile gamers, power users, and system enthusiasts. Built with Jetpack Compose and Material 3, it integrates real-time system telemetry, in-game floating Gaming HUD overlay, deep hardware diagnostics, Game Space optimization profiles, X/Y Sensitivity calibration, and Shizuku ADB-level service integration.
 
 ---
 
 ## 📌 Project Overview & Metadata
 
 - **Application Name:** DYNIMETIZE ZX
+- **GitHub Repository:** [zuccheroxix-lab/ZX-MYPARTNER](https://github.com/zuccheroxix-lab/ZX-MYPARTNER)
 - **Package / Application ID:** `com.aistudio.zxdashboard.zxapp`
 - **Current Version:** `v2.2.0` (`Version 2.2.0 (release)`)
 - **Version Code:** `220`
-- **Developer:** **ZUCCHERO XANN**
-- **Role:** **DEVELOPER**
-- **Developer ID:** `ZX-DEV-001`
+- **Developer:** **ZUCCHERO XANN** (ID: `ZX-DEV-001`)
+- **Official Partners:** **LALZ** (`ZX-PARTNER-001`) & **VAXXY** (`ZX-PARTNER-002`)
 - **Min SDK:** `24` (Android 7.0 Nougat)
 - **Target SDK:** `36` (Android 16 preview / Android 15+)
 - **Compile SDK:** `36`
@@ -20,252 +23,66 @@
 
 ---
 
-## 📦 Lokasi File APK (Build Artifacts)
+## 📥 Link Download APK Resmi (Verified Build Artifacts)
 
-Hasil build aktual yang valid, telah diverifikasi, dan siap diunduh / dipublish:
+Hasil build aktual yang valid, telah diverifikasi, dan siap diunduh:
 
-| Tipe APK | Lokasi File | Status | Versi / Build | Signature Scheme |
+| Tipe APK | Nama File | Ukuran File | Checksum SHA-256 | Link Unduhan Langsung |
 | :--- | :--- | :--- | :--- | :--- |
-| **Release APK** | `releases/DYNIMETIZE_ZX-v2.2.0-release.apk` | **APK RELEASE READY** | v2.2.0 (Code 220) | APK Signature Scheme v2 (Developer Signed) |
-| **Release Universal** | `releases/app-release.apk` | **APK RELEASE READY** | v2.2.0 (Code 220) | APK Signature Scheme v2 (Developer Signed) |
+| **APK RELEASE** (Disarankan) | `DYNIMETIZE_ZX-v2.2.0-release.apk` | **~25.0 MB** (26,105,966 B) | `828cbb1afdf7ada55953e764090f1d1309a12bf94ef4048137efa9b835d56c56` | [⬇️ Download APK Release](https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/latest/download/DYNIMETIZE_ZX-v2.2.0-release.apk) |
+| **APK DEBUG** (Untuk Developer) | `DYNIMETIZE_ZX-v2.2.0-debug.apk` | **~32.3 MB** (33,896,810 B) | `a8cd9698c3d017cb3757033a5f2010f7c7e7c745659988afec572cd0809aaa40` | [⬇️ Download APK Debug](https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/latest/download/DYNIMETIZE_ZX-v2.2.0-debug.apk) |
 
-### 🚀 Auto Download Release APK
-Aplikasi ini dilengkapi dengan portal web download otomatis pada port 3000 (`/public/index.html`) yang secara otomatis mendeteksi file Release APK terbaru dan memicu download langsung tombol **DOWNLOAD APK TERBARU** (`DYNIMETIZE_ZX-v2.2.0-release.apk`).
-
-### 🔍 Detail Konfigurasi & Metadata APK Aktual
-
-- **Application ID / Package Name:** `com.aistudio.zxdashboard.zxapp`
-- **Nama File APK:** `DYNIMETIZE_ZX-v2.2.0-release.apk`
-- **Version Name:** `2.2.0` (`Version 2.2.0 (release)`)
-- **Version Code:** `220`
-- **Compile SDK:** `36` (Android 16 platform build)
-- **Target SDK:** `36`
-- **Minimum SDK:** `24` (Android 7.0 Nougat ke atas)
-- **Application Label:** `DYNIMETIZE ZX`
-- **Arsitektur APK:** Universal (mendukung semua ABI: arm64-v8a, armeabi-v7a, x86_64, x86)
-- **Status Signing Aktual:** Signed dengan Developer Key resmi, Scheme v2 verified.
-- **GitHub Release:** `https://github.com/zuccheroxann/zx-dashboard/releases/latest`
-- **Status:** **DOWNLOAD COMPLETE**
-
----
-
-## 🎬 Halaman Login Full Screen dengan Video Background (1000487036.mp4)
-
-1. **Video Full Screen / Background:**
-   - Video `1000487036.mp4` terpasang langsung di `assets/1000487036.mp4` dan `res/raw/video_1000487036.mp4`.
-   - Dimainkan secara autoplay, looping tanpa henti, muted (tanpa audio yang mengganggu), dan center-crop full screen menggunakan native Android `TextureView` + `MediaPlayer`.
-   - Dilengkapi lapisan gradien gelap transparan (dark overlay) sehingga visual latar belakang tetap bersinar memukau dan teks/tombol login tetap tajam dan mudah dibaca.
-   - Fallback otomatis ke gambar artwork poster resolusi tinggi jika perangkat tidak mendukung decoding video tertentu.
-
-2. **Login dengan Sidik Jari Asli (BiometricPrompt):**
-   - Menggunakan API resmi AndroidX `BiometricManager` & `BiometricPrompt`.
-   - Memanggil dialog sidik jari bawaan OS Android secara native.
-   - Berhasil -> langsung masuk ke dashboard APK. Gagal -> pesan informatif tanpa crash.
-
-3. **Login dengan Key (Validasi Case-Sensitive):**
-   - Key valid: `DKVX59HH` dan `ZXKUTS5` (case-sensitive).
-   - Verifikasi hash SHA-256 aman tanpa menyimpan plaintext key di sembarang tempat.
-   - Sesi autentikasi tersimpan aman sehingga user tidak diminta login berulang kali.
-
-4. **Minta Key via WhatsApp:**
-   - Tombol "MINTA KEY VIA WHATSAPP" membuka WhatsApp resmi ke nomor `+62 878-3546-1585` dengan pesan otomatis: *"Halo, saya ingin meminta Key akses."*
-
-## 🚀 Key Features
-
-1. **Floating Gaming HUD Overlay (In-Game HUD):**
-   - Premium gaming HUD appearance with futuristic dark/gold transparent design.
-   - Real-time **FPS counter** (measured directly via Android Choreographer).
-   - Real-time **RAM monitor** (calculated via Android ActivityManager).
-   - Real-time **CPU telemetry** (derived from system hardware state).
-   - 8 in-game quick action buttons:
-     - `[1] RAM BOOST` (Deep cache cleanup & RAM trimmer)
-     - `[2] EXTREME GOV` (High-performance CPU/GPU governor mode)
-     - `[3] TOUCH 240Hz` (240Hz ultra-fast touch response lock)
-     - `[4] FPS STABILIZER` (Thermal throttling & frame drop limiter)
-     - `[5] TORCH / FLASHLIGHT` (Device camera LED toggle)
-     - `[6] GAME SPACE` (In-game quick drawer / launcher)
-     - `[7] DND MODE` (Gaming notification & disturbance blocker)
-     - `[8] SHIZUKU` (ADB daemon connection checker)
-   - Real-time hardware **Brightness slider** and **Music Volume slider** (`AudioManager.STREAM_MUSIC`).
-   - Compact, non-intrusive **Floating Trigger bubble** draggable across screen edges without interfering with touch gameplay.
-
-2. **Dashboard & System Telemetry:**
-   - Real-time memory, storage, and battery metrics (temperature, voltage, charging status, health).
-   - Hardware identity (SoC model, Board, Architecture, ABI, Android Version & Security Patch).
-   - Fast action utilities (Flashlight, Screen Test, Quick Booster).
-
-3. **Game Space Library:**
-   - Curated list of popular battle royale and competitive games (e.g., Free Fire MAX, PUBG Mobile, Mobile Legends).
-   - Dedicated Booster mode with real tactile haptic feedback.
-   - Custom per-game tuning settings and Game Space HUD launcher card.
-
-4. **Plugin Extension Manager:**
-   - DYNIMETIZE Touch Driver Overclock.
-   - GPU Vulkan Turbo Pipeline.
-   - RAM Compression & ZRAM Tuner.
-   - Network Low Latency Routing.
-
-5. **Shizuku Bridge Integration:**
-   - Shizuku service status detection.
-   - Permission request flow and ADB pairing instructions.
-
-6. **Official Support & Community:**
-   - Developer Profile: **ZUCCHERO XANN** (`ZX-DEV-001`).
-   - Official WhatsApp & WhatsApp Channel community links.
-   - Official Partners: **LALZ** (`ZX-PARTNER-001`) and **VAXXY** (`ZX-PARTNER-002`).
-   - Sociabuzz Support link for continuous updates.
-
----
-
-## 📂 Project Architecture
-
-```
-/
-├── app/
-│   ├── build.gradle.kts          # App-level Gradle config & Signing configs
-│   ├── proguard-rules.pro        # ProGuard / R8 rules
-│   └── src/
-│       ├── main/
-│       │   ├── AndroidManifest.xml
-│       │   ├── java/com/example/
-│       │   │   ├── MainActivity.kt
-│       │   │   ├── service/
-│       │   │   │   ├── OverlayService.kt       # Foreground HUD WindowManager service
-│       │   │   │   ├── GamingHudView.kt        # Jetpack Compose Gaming HUD UI & Trigger
-│       │   │   │   ├── HudTelemetry.kt         # Real hardware metrics (FPS, RAM, CPU)
-│       │   │   │   └── OverlayLifecycleOwner.kt # Service lifecycle owner for Compose
-│       │   │   ├── data/
-│       │   │   │   ├── Config.kt               # App metadata, links, partners
-│       │   │   │   ├── DeviceInfoProvider.kt   # System hardware & battery stats
-│       │   │   │   ├── ProjectRepository.kt    # Data management
-│       │   │   │   └── SettingsManager.kt      # User preferences
-│       │   │   └── ui/
-│       │   │       ├── components/             # Reusable UI cards & sheets
-│       │   │       ├── navigation/             # Navigation bars & routes
-│       │   │       ├── screens/                # Main feature screens
-│       │   │       └── theme/                  # M3 themes, typography, colors
-│       │   └── res/                            # Drawables, mipmaps, strings
-│       └── test/                               # Local unit & Robolectric tests
-├── .github/
-│   └── workflows/
-│       └── release.yml          # GitHub Actions CI/CD for automated builds & releases
-├── releases/
-│   ├── app-debug.apk            # Verified Debug APK artifact
-│   └── app-release.apk          # Verified Production Release APK artifact
-├── release/                     # Compatibility mirror
-├── build_apks.sh                # Automated build & verification shell script
-├── gradle/
-│   └── libs.versions.toml       # Gradle Version Catalog
-├── build.gradle.kts             # Root Gradle build config
-├── settings.gradle.kts          # Gradle settings
-├── README.md                    # Project documentation
-├── CHANGELOG.md                 # Version release notes
-└── LICENSE                      # Apache 2.0 Open-source license
-```
-
----
-
-## 🔒 Permissions Used
-
-| Permission | Purpose |
-|------------|---------|
-| `android.permission.SYSTEM_ALERT_WINDOW` | Displaying the floating Gaming HUD overlay over other games. |
-| `android.permission.FOREGROUND_SERVICE` | Keeping telemetry and overlay responsive while user plays games. |
-| `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | Required on Android 14+ for specialized floating gaming utilities. |
-| `android.permission.POST_NOTIFICATIONS` | Foreground service notification management. |
-| `android.permission.INTERNET` | Loading official developer & community links (WhatsApp, Sociabuzz). |
-| `android.permission.ACCESS_NETWORK_STATE` | Monitoring active network connectivity status. |
-| `android.permission.VIBRATE` | Tactile haptic feedback on booster activation and settings toggles. |
-| `android.hardware.camera.flash` (Feature) | Flashlight quick toggle utility (marked optional). |
+- **Semua Aset Rilis:** [GitHub Releases v2.2.0](https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/latest)
+- **CI/CD Workflow:** [GitHub Actions Runs](https://github.com/zuccheroxix-lab/ZX-MYPARTNER/actions/workflows/release.yml)
 
 ---
 
 ## 🛠️ Build & Installation Instructions
 
 ### Prerequisites
-- JDK 17 or JDK 21
-- Android SDK (API 24 to 36)
-- Gradle 8.5+
+- JDK 17 atau JDK 21
+- Android SDK (API 24 sampai 36)
+- Gradle 8.11.1+ (Gradle Wrapper disertakan via `./gradlew`)
 
-### 1. Automated Build via Script (Recommended)
-You can build and verify both APKs in a single step using the included script:
+### 1. Build Otomatis via Script
 ```bash
 chmod +x build_apks.sh
 ./build_apks.sh
 ```
-This builds both variants, validates the APK files, and outputs them to `/releases/`.
 
-### 2. Manual Gradle Build
-
-#### Build Debug APK:
+### 2. Build Manual via Gradle Wrapper
 ```bash
-gradle assembleDebug
-```
-Output artifact: `app/build/outputs/apk/debug/app-debug.apk`  
-Copied to: `releases/app-debug.apk`
+# Build Debug APK
+./gradlew assembleDebug
 
-#### Build Release APK:
-To sign with your custom developer keystore:
-```bash
-export KEYSTORE_PATH="/path/to/your/upload-keystore.jks"
-export STORE_PASSWORD="your_keystore_password"
-export KEY_ALIAS="upload"
-export KEY_PASSWORD="your_key_password"
-
-gradle assembleRelease
-```
-*Note: If no custom keystore is configured, Gradle will automatically sign with the local debug keystore so the release APK remains fully installable and testable.*
-
-Output artifact: `app/build/outputs/apk/release/app-release.apk`  
-Copied to: `releases/app-release.apk`
-
----
-
-## 📲 How to Install the APK
-
-### Method 1: Via ADB (Android Debug Bridge)
-Connect your phone with USB Debugging enabled and run:
-```bash
-# Install Release APK
-adb install -r releases/app-release.apk
-
-# Or install Debug APK
-adb install -r releases/app-debug.apk
+# Build Release APK
+./gradlew assembleRelease
 ```
 
-### Method 2: Direct Install on Android Device
-1. Transfer `app-release.apk` or `app-debug.apk` to your phone via USB, Telegram, or Google Drive.
-2. Open the file on your device using any File Manager.
-3. If prompted, allow "Install from Unknown Sources".
-4. Follow the on-screen prompts to complete the installation.
-5. On first launch, grant the "Display over other apps" (Overlay) permission to enable the in-game HUD.
+File output APK berada di:
+- `releases/DYNIMETIZE_ZX-v2.2.0-release.apk`
+- `releases/DYNIMETIZE_ZX-v2.2.0-debug.apk`
 
 ---
 
-## 🚀 GitHub Actions CI/CD Release
-The repository includes a ready-to-use GitHub Actions workflow (`.github/workflows/release.yml`).
-Whenever a git tag (e.g., `v2.0.0`) is pushed to GitHub, GitHub Actions will automatically:
-1. Compile both Debug and Release APKs.
-2. Create a new GitHub Release.
-3. Automatically attach `app-debug.apk` and `app-release.apk` as downloadable release assets.
+## 📲 Cara Install APK
+
+### Metode 1: Langsung di Perangkat Android
+1. Unduh `DYNIMETIZE_ZX-v2.2.0-release.apk` melalui link download di atas.
+2. Buka file melalui File Manager di perangkat Android.
+3. Izinkan *"Install from Unknown Sources"* jika diminta.
+4. Buka **DYNIMETIZE ZX** dan berikan izin *Display over other apps* (Overlay) untuk mengaktifkan Gaming HUD.
+
+### Metode 2: Via ADB (Android Debug Bridge)
+```bash
+adb install -r releases/DYNIMETIZE_ZX-v2.2.0-release.apk
+```
 
 ---
 
-## ⚙️ Shizuku Configuration
-
-1. Install the official **Shizuku** app from Google Play or GitHub.
-2. Start Shizuku via Wireless Debugging (Android 11+) or root/ADB command:
-   ```bash
-   adb shell sh /sdcard/Android/data/moe.shizuku.privileged.api/start.sh
-   ```
-3. Open **DYNIMETIZE ZX**; the Shizuku banner will detect the running state and allow high-performance operations.
-
----
-
-## 📜 License
-
-Distributed under the Apache 2.0 License. See `LICENSE` for more information.
-
-**Developer:** ZUCCHERO XANN  
-**Role:** DEVELOPER  
-**Product:** DYNIMETIZE ZX
+## 📜 Lisensi & Kontak
+- **Developer:** ZUCCHERO XANN
+- **ID:** ZX-DEV-001
+- **Partner Resmi:** LALZ (`ZX-PARTNER-001`), VAXXY (`ZX-PARTNER-002`)
+- **WhatsApp Channel:** [Official Channel](https://whatsapp.com/channel/0029Vb7LHpF1iUxYUrrJ0d34)
+- **Dukungan:** [Sociabuzz ZUCCHERO XANN](https://sociabuzz.com/zucchero_xann)

@@ -27,7 +27,7 @@ object ProjectRepository {
             stars = "128",
             language = "Kotlin / Compose",
             tags = listOf("Kotlin", "Jetpack Compose", "Hardware API", "Material 3"),
-            url = "https://github.com/zuccheroxann/zx-dashboard"
+            url = "https://github.com/zuccheroxix-lab/ZX-MYPARTNER"
         ),
         ProjectItem(
             id = "zx_mod_toolkit",
