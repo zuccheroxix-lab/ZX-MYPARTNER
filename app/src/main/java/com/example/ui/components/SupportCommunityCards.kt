@@ -85,7 +85,19 @@ object LinkHandler {
             }
             context.startActivity(intent)
         } catch (_: Exception) {
-            Toast.makeText(context, "Could not open link: $url", Toast.LENGTH_SHORT).show()
+            try {
+                val chooserIntent = Intent.createChooser(
+                    Intent(Intent.ACTION_VIEW, Uri.parse(url)),
+                    "Buka Link Download"
+                ).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(chooserIntent)
+            } catch (e2: Exception) {
+                copyToClipboard(context, "URL", url) {
+                    Toast.makeText(context, "Link disalin ke clipboard:\n$url", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 
