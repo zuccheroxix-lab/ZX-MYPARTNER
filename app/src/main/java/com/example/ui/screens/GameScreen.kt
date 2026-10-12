@@ -82,7 +82,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import com.example.R
+import com.example.data.SensitivityManager
 import com.example.data.SettingsManager
+import com.example.ui.components.XYSensitivitySection
 import com.example.ui.theme.LocalAccentColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -104,9 +106,10 @@ fun GameScreen(
     val context = LocalContext.current
     val accentColor = LocalAccentColor.current
     val settingsManager = remember { SettingsManager(context) }
+    val sensitivityManager = remember { SensitivityManager(context) }
 
-    // Sub-sections: 0 = Game Space, 1 = Sensitivity Lab, 2 = Profile & Touch Opt
-    var selectedTab by remember { mutableIntStateOf(0) }
+    // Sub-sections: 0 = Game Space, 1 = Sensitivity Lab (X/Y Sensi System), 2 = Profile & Touch Opt
+    var selectedTab by remember { mutableIntStateOf(1) } // Default to Sensitivity Lab
     val scrollState = rememberScrollState()
 
     // Sensitivity State
@@ -450,13 +453,22 @@ fun GameScreen(
             }
 
             1 -> {
-                // SENSITIVITY GAMELAB TAB (Honest, Clean, Real Android Pointer Speed Profiles)
+                // SENSITIVITY GAMELAB & X/Y SENSITIVITY SYSTEM TAB
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(scrollState)
                         .padding(horizontal = 20.dp)
                 ) {
+                    // 1. Primary Feature: DYNIMETIZE ZX X/Y Sensitivity System
+                    XYSensitivitySection(
+                        sensitivityManager = sensitivityManager,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 2. Legacy / Secondary: Quick OS Pointer Profiles
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -469,46 +481,43 @@ fun GameScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
-                                        .size(36.dp)
+                                        .size(34.dp)
                                         .clip(CircleShape)
                                         .background(Color(0xFF38BDF8).copy(alpha = 0.15f)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(Icons.Default.TouchApp, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Default.TouchApp, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(18.dp))
                                 }
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Column {
-                                    Text("Sensitivity GameLab", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                    Text("Profil kurva penunjuk layar sistem Android", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                                    Text("Profil Cepat OS Pointer", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text("Kurva akselerasi sentuh Android standar", color = Color(0xFF8E8E98), fontSize = 10.5.sp)
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            Text("Pilih Profil Responsivitas:", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             val profiles = listOf(
                                 Triple("STANDARD", "Standar (1.0x)", "Kecepatan penunjuk default sistem Android"),
-                                Triple("HIGH_PRECISION", "Presisi (1.25x)", "Cocok untuk bidikan jarak jauh & marksman"),
-                                Triple("ESPORTS_PRO", "Esports Pro (1.5x)", "Responsif untuk pergerakan kamera cepat"),
-                                Triple("ULTRA_FLICK", "Ultra Flick (1.75x)", "Kecepatan gesekan maksimal 180° cepat")
+                                Triple("HIGH_PRECISION", "Presisi (1.25x)", "Bidikan stabil jarak jauh"),
+                                Triple("ESPORTS_PRO", "Esports Pro (1.5x)", "Refleks kamera cepat"),
+                                Triple("ULTRA_FLICK", "Ultra Flick (1.75x)", "Flick 180° maksimal")
                             )
 
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 profiles.forEach { (key, label, desc) ->
                                     val isSelected = sensitivityProfile == key
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(RoundedCornerShape(8.dp))
                                             .background(if (isSelected) accentColor.copy(alpha = 0.18f) else Color(0xFF171923))
-                                            .border(0.8.dp, if (isSelected) accentColor else Color(0xFF262A3B), RoundedCornerShape(10.dp))
+                                            .border(0.8.dp, if (isSelected) accentColor else Color(0xFF262A3B), RoundedCornerShape(8.dp))
                                             .clickable {
                                                 settingsManager.setSensitivityProfile(key)
-                                                Toast.makeText(context, "Profil: $label", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "Profil OS: $label", Toast.LENGTH_SHORT).show()
                                             }
-                                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                                            .padding(horizontal = 10.dp, vertical = 8.dp)
                                     ) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -516,30 +525,30 @@ fun GameScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Column(modifier = Modifier.weight(1f)) {
-                                                Text(label, color = if (isSelected) accentColor else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                                Text(desc, color = Color(0xFF8E8E98), fontSize = 10.sp)
+                                                Text(label, color = if (isSelected) accentColor else Color.White, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                                                Text(desc, color = Color(0xFF8E8E98), fontSize = 9.5.sp)
                                             }
                                             if (isSelected) {
-                                                Icon(Icons.Default.Check, contentDescription = null, tint = accentColor, modifier = Modifier.size(18.dp))
+                                                Icon(Icons.Default.Check, contentDescription = null, tint = accentColor, modifier = Modifier.size(16.dp))
                                             }
                                         }
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedButton(
                                     onClick = {
                                         settingsManager.setSensitivityProfile("STANDARD")
-                                        Toast.makeText(context, "Sensitivitas direset ke Standar (1.0x)", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Direset ke Standar (1.0x)", Toast.LENGTH_SHORT).show()
                                     },
                                     modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(8.dp),
                                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
                                 ) {
-                                    Text("Reset Standar", fontSize = 11.sp)
+                                    Text("Reset OS", fontSize = 11.sp)
                                 }
 
                                 Button(
@@ -561,20 +570,12 @@ fun GameScreen(
                                         }
                                     },
                                     modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(8.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = accentColor)
                                 ) {
-                                    Text("Pointer Speed OS", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                    Text("Buka Pengaturan OS", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.5.sp)
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = "Aman 100%: Menggunakan setelan penunjuk bawaan Android tanpa memodifikasi file internal game atau memicu anti-cheat.",
-                                color = Color(0xFF6E7285),
-                                fontSize = 10.sp
-                            )
                         }
                     }
 

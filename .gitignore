@@ -1,10 +1,13 @@
 # Built application files
 *.apk
-!releases/*.apk
-!release/*.apk
 *.aar
 *.ap_
 *.aab
+
+# Release binaries (Do not commit binary APKs to git repo to avoid GitHub push payload limits)
+release/
+releases/
+.build-outputs/
 
 # Files for the ART/Dalvik VM
 *.dex
@@ -18,7 +21,6 @@ gen/
 out/
 build/
 app/build/
-.build-outputs/
 
 # Gradle files
 .gradle/
