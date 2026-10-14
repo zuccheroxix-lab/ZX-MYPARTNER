@@ -286,6 +286,165 @@
       color: #A0A5B5;
       word-break: break-all;
     }
+
+    /* QR Code Generator Card Styles */
+    .qr-card {
+      background: rgba(18, 20, 28, 0.95);
+      border: 1px solid rgba(255, 179, 0, 0.4);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+      text-align: left;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255, 179, 0, 0.05);
+      position: relative;
+    }
+
+    .qr-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .qr-icon-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 179, 0, 0.15);
+      border: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+
+    .qr-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .qr-subtitle {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .qr-body {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    @media (max-width: 520px) {
+      .qr-body {
+        flex-direction: column;
+        text-align: center;
+      }
+      .qr-meta {
+        align-items: center;
+      }
+    }
+
+    .qr-frame {
+      width: 140px;
+      height: 140px;
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(255, 179, 0, 0.35);
+      border: 2px solid var(--gold);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .qr-frame svg, .qr-frame img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .qr-loading {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.9);
+      color: #111;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+    }
+
+    .qr-meta {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .qr-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(0, 230, 118, 0.15);
+      border: 1px solid var(--green);
+      color: var(--green);
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      width: fit-content;
+    }
+
+    .qr-link-preview {
+      background: #0B0D13;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--cyan);
+      word-break: break-all;
+      max-height: 48px;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    .qr-action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-qr-action {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-qr-action:hover {
+      background: rgba(255, 179, 0, 0.15);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
   </style>
 </head>
 <body>
@@ -366,6 +525,40 @@
       </button>
     </div>
 
+    <!-- QR Code Generator Card for Direct Mobile Access -->
+    <div class="qr-card">
+      <div class="qr-header">
+        <div class="qr-icon-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+        </div>
+        <div>
+          <div class="qr-title">SCAN TO DOWNLOAD (MOBILE ACCESS)</div>
+          <div class="qr-subtitle">Arahkan kamera ponsel Android untuk unduh instan APK Release</div>
+        </div>
+      </div>
+
+      <div class="qr-body">
+        <div class="qr-frame">
+          <div id="qrContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
+          <div id="qrLoading" class="qr-loading">Membuat QR...</div>
+        </div>
+        <div class="qr-meta">
+          <div class="qr-badge" id="qrBadge">RELEASE APK DIRECT LINK</div>
+          <div class="qr-link-preview" id="qrLinkText">Memuat tautan rilis...</div>
+          <div class="qr-action-row">
+            <button class="btn-qr-action" onclick="refreshQr()">🔄 Refresh</button>
+            <button class="btn-qr-action" onclick="copyQrLink()">📋 Salin Link</button>
+            <button class="btn-qr-action" onclick="toggleQrTarget()" id="toggleTargetBtn">🎯 Mode: Release APK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Status & Progress Container -->
     <div id="statusBox" class="status-box"></div>
 
@@ -411,6 +604,97 @@
       }
     }
     loadStatus();
+
+    // QR Code Generator Logic for Direct Mobile Access
+    let currentQrTarget = 'release'; // 'release' | 'github' | 'debug'
+
+    function getTargetUrl(target) {
+      if (target === 'github') {
+        return 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/latest';
+      }
+      const path = target === 'debug' ? DEBUG_URL : RELEASE_URL;
+      return window.location.origin + path;
+    }
+
+    async function updateQrCode(target = currentQrTarget) {
+      currentQrTarget = target;
+      const url = getTargetUrl(target);
+      const qrLinkText = document.getElementById('qrLinkText');
+      const qrLoading = document.getElementById('qrLoading');
+      const qrContainer = document.getElementById('qrContainer');
+      const qrBadge = document.getElementById('qrBadge');
+      const toggleBtn = document.getElementById('toggleTargetBtn');
+
+      if (qrLinkText) qrLinkText.innerText = url;
+      if (qrLoading) qrLoading.style.display = 'flex';
+
+      if (qrBadge) {
+        if (target === 'release') {
+          qrBadge.innerText = 'RELEASE APK DIRECT LINK';
+          qrBadge.style.color = 'var(--green)';
+          qrBadge.style.borderColor = 'var(--green)';
+        } else if (target === 'debug') {
+          qrBadge.innerText = 'DEBUG APK DIRECT LINK';
+          qrBadge.style.color = 'var(--cyan)';
+          qrBadge.style.borderColor = 'var(--cyan)';
+        } else {
+          qrBadge.innerText = 'GITHUB RELEASE LATEST';
+          qrBadge.style.color = 'var(--gold)';
+          qrBadge.style.borderColor = 'var(--gold)';
+        }
+      }
+
+      if (toggleBtn) {
+        toggleBtn.innerText = target === 'release' ? '🎯 Mode: Release APK' : (target === 'debug' ? '🎯 Mode: Debug APK' : '🎯 Mode: GitHub');
+      }
+
+      try {
+        const res = await fetch(`/api/qrcode?format=svg&text=${encodeURIComponent(url)}`);
+        if (res.ok) {
+          const svgContent = await res.text();
+          if (qrContainer) {
+            qrContainer.innerHTML = svgContent;
+          }
+          if (qrLoading) qrLoading.style.display = 'none';
+          return;
+        }
+      } catch (e) {
+        console.warn('[QR] SVG fetch error, using fallback:', e);
+      }
+
+      // Fallback Image
+      if (qrContainer) {
+        qrContainer.innerHTML = `<img src="/api/qrcode?format=png&text=${encodeURIComponent(url)}" alt="QR Code" style="width:100%;height:100%;object-fit:contain;" />`;
+      }
+      if (qrLoading) qrLoading.style.display = 'none';
+    }
+
+    function refreshQr() {
+      updateQrCode(currentQrTarget);
+    }
+
+    function toggleQrTarget() {
+      if (currentQrTarget === 'release') {
+        updateQrCode('github');
+      } else if (currentQrTarget === 'github') {
+        updateQrCode('debug');
+      } else {
+        updateQrCode('release');
+      }
+    }
+
+    function copyQrLink() {
+      const url = getTargetUrl(currentQrTarget);
+      navigator.clipboard.writeText(url).then(() => {
+        statusBox.style.display = 'block';
+        statusBox.innerHTML = `📋 <strong>Link QR Code berhasil disalin:</strong><br><span style="font-size:12px;color:#bbb;">${url}</span>`;
+      }).catch(() => {
+        prompt('Salin link download:', url);
+      });
+    }
+
+    // Initialize QR Code for Release APK on page ready
+    updateQrCode('release');
 
     function copyLink(type) {
       const url = window.location.origin + (type === 'debug' ? DEBUG_URL : RELEASE_URL);

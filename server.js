@@ -3,10 +3,25 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const crypto = require('crypto');
+let qrcode = null;
+try {
+  qrcode = require('qrcode');
+} catch (e) {
+  console.warn('[QR] qrcode library notice:', e.message);
+}
 
 const PORT = 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const RELEASES_DIR = path.join(__dirname, 'releases');
+
+function getFullUrl(req, subpath) {
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  const proto = forwardedProto ? forwardedProto.split(',')[0].trim() : (req.connection && req.connection.encrypted ? 'https' : 'http');
+  const forwardedHost = req.headers['x-forwarded-host'];
+  const host = forwardedHost ? forwardedHost.split(',')[0].trim() : (req.headers.host || 'localhost:3000');
+  const cleanPath = subpath ? (subpath.startsWith('/') ? subpath : `/${subpath}`) : '';
+  return `${proto}://${host}${cleanPath}`;
+}
 
 const RELEASE_APK_FILENAME = 'DYNIMETIZE_ZX-v2.2.0-release.apk';
 const DEBUG_APK_FILENAME = 'DYNIMETIZE_ZX-v2.2.0-debug.apk';
@@ -169,6 +184,9 @@ const server = http.createServer((req, res) => {
     const debugSize = debugExists ? fs.statSync(debugApk).size : 0;
     const debugSha256 = debugExists ? calculateSha256(debugApk) : '';
 
+    const releaseFullUrl = getFullUrl(req, `/${RELEASE_APK_FILENAME}`);
+    const debugFullUrl = getFullUrl(req, `/${DEBUG_APK_FILENAME}`);
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(
       JSON.stringify({
@@ -180,6 +198,9 @@ const server = http.createServer((req, res) => {
         developerId: 'ZX-DEV-001',
         githubRepo: 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER',
         githubReleaseUrl: 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/latest',
+        releaseFullUrl: releaseFullUrl,
+        debugFullUrl: debugFullUrl,
+        qrCodeSvgUrl: `/api/qrcode?format=svg&text=${encodeURIComponent(releaseFullUrl)}`,
         releaseApk: {
           filename: RELEASE_APK_FILENAME,
           exists: releaseExists,
@@ -187,6 +208,7 @@ const server = http.createServer((req, res) => {
           sha256: releaseSha256,
           downloadUrl: `/${RELEASE_APK_FILENAME}`,
           altDownloadUrl: '/app-release.apk',
+          fullUrl: releaseFullUrl,
         },
         debugApk: {
           filename: DEBUG_APK_FILENAME,
@@ -195,10 +217,98 @@ const server = http.createServer((req, res) => {
           sha256: debugSha256,
           downloadUrl: `/${DEBUG_APK_FILENAME}`,
           altDownloadUrl: '/app-debug.apk',
+          fullUrl: debugFullUrl,
         },
       })
     );
     return;
+  }
+
+  // QR Code Generation Endpoint (SVG, PNG, or JSON DataURL)
+  if (pathname === '/api/qrcode' || pathname === '/api/qr' || pathname === '/qr') {
+    const rawText = parsedUrl.query.text;
+    const format = (parsedUrl.query.format || 'svg').toLowerCase();
+    const defaultUrl = getFullUrl(req, `/${RELEASE_APK_FILENAME}`);
+    const targetUrl = (rawText && typeof rawText === 'string' && rawText.trim().length > 0)
+      ? rawText.trim()
+      : defaultUrl;
+
+    if (!qrcode) {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'QR Code generator not available' }));
+      return;
+    }
+
+    if (format === 'svg') {
+      qrcode.toString(targetUrl, {
+        type: 'svg',
+        margin: 1,
+        width: 320,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+      }, (err, svg) => {
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'text/plain' });
+          res.end(err.message);
+          return;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'image/svg+xml; charset=utf-8',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.end(svg);
+      });
+      return;
+    } else if (format === 'png') {
+      qrcode.toBuffer(targetUrl, {
+        type: 'png',
+        margin: 2,
+        width: 360,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+      }, (err, buffer) => {
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'text/plain' });
+          res.end(err.message);
+          return;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'image/png',
+          'Content-Length': buffer.length,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.end(buffer);
+      });
+      return;
+    } else {
+      qrcode.toDataURL(targetUrl, {
+        margin: 2,
+        width: 360,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+      }, (err, dataUrl) => {
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+          return;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.end(JSON.stringify({ targetUrl, dataUrl }));
+      });
+      return;
+    }
   }
 
   // Static files in public/
