@@ -203,8 +203,8 @@ class OverlayService : Service() {
                         updateBrightness(pct)
                     },
                     onActionRamBoost = {
-                        val freed = telemetryTracker?.triggerRamTrim() ?: 250
-                        Toast.makeText(this@OverlayService, "RAM Freed: +${freed}MB Cached Memory Cleaned", Toast.LENGTH_SHORT).show()
+                        val message = telemetryTracker?.triggerRamTrim() ?: "Optimasi memori internal selesai."
+                        Toast.makeText(this@OverlayService, message, Toast.LENGTH_SHORT).show()
                         telemetryTracker?.sampleMetrics()
                     },
                     onToggleExtremeGov = {

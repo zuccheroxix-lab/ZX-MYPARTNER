@@ -118,9 +118,9 @@ fun PluginExtensionScreen(
             ),
             ZenixPlugin(
                 id = "thermal_guard",
-                name = "Thermal Throttling Bypass Guard",
+                name = "Thermal & Throttling Monitor Guard",
                 version = "v2.0.4",
-                description = "Memantau suhu baterai & SoC untuk mencegah penurunan performa agresif dari thermal manager.",
+                description = "Memantau suhu baterai & SoC untuk mencegah penurunan performa berlebih dari thermal manager secara aman.",
                 icon = Icons.Default.ElectricBolt,
                 isEnabled = false
             )

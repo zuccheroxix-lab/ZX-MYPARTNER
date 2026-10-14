@@ -164,7 +164,7 @@ class SensitivityManager(private val context: Context) {
             getDefaultPreset(),
             SensitivityPreset(
                 id = "preset_ff_headshot_drag",
-                name = "FF Drag Shoot (Pro Headshot)",
+                name = "FF Drag Aim (Tuning Manual)",
                 targetGamePackage = "com.dts.freefireth",
                 targetGameName = "Free Fire / MAX",
                 sensX = 1.65f,
@@ -175,7 +175,7 @@ class SensitivityManager(private val context: Context) {
                 scope4xSens = 84,
                 sniperSens = 70,
                 freeLookSens = 80,
-                notes = "Sumbu Y ditingkatkan 2.10x agar tarikan tombol tembak ke atas lebih licin dan responsif"
+                notes = "Sumbu Y diatur 2.10x untuk memudahkan tarikan bidikan manual ke atas. Setelan murni sensitivitas layar, non-cheat dan legal."
             ),
             SensitivityPreset(
                 id = "preset_ff_gyro_fast",

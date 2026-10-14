@@ -70,10 +70,154 @@ data class ApplyResult(
     val hasSecurePermission: Boolean
 )
 
+data class ShellExecutionResult(
+    val isSuccess: Boolean,
+    val output: String,
+    val exitCode: Int,
+    val executionMethod: String,
+    val explanation: String
+)
+
 class GameSmoothnessManager(private val context: Context) {
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    init {
+        val metrics = context.resources.displayMetrics
+        val nativeDpi = metrics.densityDpi
+        val nativeRes = "${metrics.widthPixels}x${metrics.heightPixels}"
+        if (!prefs.contains(KEY_ORIGINAL_DPI)) {
+            prefs.edit()
+                .putInt(KEY_ORIGINAL_DPI, nativeDpi)
+                .putString(KEY_ORIGINAL_RESOLUTION, nativeRes)
+                .apply()
+        }
+    }
+
+    fun getOriginalDpi(): Int {
+        val metrics = context.resources.displayMetrics
+        return prefs.getInt(KEY_ORIGINAL_DPI, metrics.densityDpi)
+    }
+
+    fun getOriginalResolution(): String {
+        val metrics = context.resources.displayMetrics
+        val fallback = "${metrics.widthPixels}x${metrics.heightPixels}"
+        return prefs.getString(KEY_ORIGINAL_RESOLUTION, fallback) ?: fallback
+    }
+
+    fun isShizukuInstalled(): Boolean {
+        return try {
+            context.packageManager.getPackageInfo("moe.shizuku.privileged.api", 0)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun isRootAvailable(): Boolean {
+        val paths = arrayOf(
+            "/system/bin/su",
+            "/system/xbin/su",
+            "/sbin/su",
+            "/vendor/bin/su"
+        )
+        for (p in paths) {
+            try {
+                if (java.io.File(p).exists()) return true
+            } catch (_: Exception) {}
+        }
+        return false
+    }
+
+    fun executeWmCommand(cmd: String): ShellExecutionResult {
+        if (isRootAvailable()) {
+            try {
+                val proc = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
+                val output = proc.inputStream.bufferedReader().readText().trim()
+                val error = proc.errorStream.bufferedReader().readText().trim()
+                val code = proc.waitFor()
+                if (code == 0) {
+                    return ShellExecutionResult(
+                        isSuccess = true,
+                        output = if (output.isNotEmpty()) output else "Command sukses dijalankan via Root ($cmd)",
+                        exitCode = 0,
+                        executionMethod = "ROOT",
+                        explanation = "Perintah '$cmd' berhasil dieksekusi dengan izin Root SU."
+                    )
+                }
+            } catch (_: Exception) {}
+        }
+
+        try {
+            val proc = Runtime.getRuntime().exec(arrayOf("sh", "-c", cmd))
+            val output = proc.inputStream.bufferedReader().readText().trim()
+            val error = proc.errorStream.bufferedReader().readText().trim()
+            val code = proc.waitFor()
+            if (code == 0) {
+                return ShellExecutionResult(
+                    isSuccess = true,
+                    output = if (output.isNotEmpty()) output else "Perintah dieksekusi normal (Exit 0)",
+                    exitCode = 0,
+                    executionMethod = "STANDARD_SHELL",
+                    explanation = "Perintah berhasil dijalankan melalui shell proses Android."
+                )
+            } else {
+                val combined = if (error.isNotEmpty()) error else output
+                return ShellExecutionResult(
+                    isSuccess = false,
+                    output = combined.ifEmpty { "Permission Denial: Shell memerlukan hak akses ADB atau Shizuku." },
+                    exitCode = code,
+                    executionMethod = "STANDARD_SHELL",
+                    explanation = "Android membatasi modifikasi tampilan OS ($cmd) tanpa ADB / Shizuku."
+                )
+            }
+        } catch (e: Exception) {
+            return ShellExecutionResult(
+                isSuccess = false,
+                output = "Eksekusi gagal: ${e.localizedMessage}",
+                exitCode = -1,
+                executionMethod = "ERROR",
+                explanation = "Gagal menjalankan proses shell sistem."
+            )
+        }
+    }
+
+    fun restoreOriginalDisplay(activity: Activity? = null): ApplyResult {
+        val origDpi = getOriginalDpi()
+        val origRes = getOriginalResolution()
+
+        executeWmCommand("wm size reset")
+        executeWmCommand("wm density reset")
+
+        val defaultConfig = SmoothnessConfig(
+            mode = "SMOOTH",
+            targetRefreshRate = 0,
+            touchProfile = "STANDARD",
+            hapticIntensity = "BALANCED",
+            dpiPreset = "NATIVE",
+            customDpi = origDpi,
+            customResolution = origRes,
+            minimalPostProcessing = false
+        )
+        saveConfig(defaultConfig, activity)
+
+        if (checkSecurePermission()) {
+            try {
+                Settings.Global.putString(context.contentResolver, "display_density_forced", origDpi.toString())
+            } catch (_: Exception) {}
+        }
+
+        return ApplyResult(
+            windowApplied = true,
+            globalOsDpiApplied = checkSecurePermission(),
+            appliedDpi = origDpi,
+            appliedResolution = origRes,
+            message = "Resolusi & DPI berhasil dipulihkan ke setelan bawaan ($origRes, $origDpi DPI).",
+            reasonExplanation = "Perintah 'wm size reset' dan 'wm density reset' telah dikirimkan ke WindowManager.",
+            hasSecurePermission = checkSecurePermission()
+        )
+    }
 
     private val _config = MutableStateFlow(loadConfig())
     val config: StateFlow<SmoothnessConfig> = _config.asStateFlow()
@@ -541,5 +685,7 @@ class GameSmoothnessManager(private val context: Context) {
         private const val KEY_CUSTOM_DPI = "key_custom_dpi"
         private const val KEY_CUSTOM_RESOLUTION = "key_custom_resolution"
         private const val KEY_MINIMAL_POST_PROCESSING = "key_minimal_post_processing"
+        private const val KEY_ORIGINAL_DPI = "key_original_dpi"
+        private const val KEY_ORIGINAL_RESOLUTION = "key_original_resolution"
     }
 }

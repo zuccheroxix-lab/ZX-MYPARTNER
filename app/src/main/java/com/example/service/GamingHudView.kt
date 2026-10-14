@@ -379,7 +379,7 @@ fun GamingHudPanel(
                         HudFeatureTile(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.RocketLaunch,
-                            label = "RAM BOOST",
+                            label = "MEM OPT",
                             isActive = true,
                             onClick = {
                                 vibrate()

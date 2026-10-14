@@ -275,26 +275,21 @@ class HudTelemetryTracker(
     }
 
     /**
-     * Executes real JVM Garbage Collection and reports exact freed memory without fabrication.
+     * Executes internal app cache cleanup and JVM garbage collection honestly.
+     * Does NOT falsely claim to wipe entire device RAM, as Android OS protects other apps' processes.
      */
-    fun triggerRamTrim(): Int {
-        val beforeFree = activityManager?.let { am ->
-            val info = ActivityManager.MemoryInfo()
-            am.getMemoryInfo(info)
-            info.availMem
-        } ?: 0L
+    fun triggerRamTrim(): String {
+        val freedCacheBytes = com.example.data.CacheManager.clearAppCache(context)
+        val formattedCache = com.example.data.CacheManager.formatBytes(freedCacheBytes)
 
         System.gc()
         Runtime.getRuntime().gc()
 
-        val afterFree = activityManager?.let { am ->
-            val info = ActivityManager.MemoryInfo()
-            am.getMemoryInfo(info)
-            info.availMem
-        } ?: 0L
-
-        val freedMb = ((afterFree - beforeFree) / (1024 * 1024)).toInt().coerceAtLeast(0)
-        return freedMb
+        return if (freedCacheBytes > 0) {
+            "Cache aplikasi ($formattedCache) dibersihkan & memori internal dipadatkan."
+        } else {
+            "Memori proses aplikasi telah dipadatkan secara optimal."
+        }
     }
 
     private fun checkShizukuInstalled(): Boolean {

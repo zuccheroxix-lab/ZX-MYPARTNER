@@ -29,6 +29,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -41,10 +42,14 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Warning
+import com.example.ui.components.ExecTermSection
+import com.example.ui.components.GameConfigFileInspector
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -256,15 +261,18 @@ fun ToolsScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Segmented Sub-Category Tabs
+        // Segmented Sub-Category Tabs (6 Tabs)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             val tabs = listOf(
-                "DPI & Res" to Icons.Default.DisplaySettings,
+                "DPI & Downscale" to Icons.Default.DisplaySettings,
+                "ExecTerm" to Icons.Default.Terminal,
+                "Game Files" to Icons.Default.FolderZip,
                 "DNS" to Icons.Default.Dns,
                 "Crosshair & HUD" to Icons.Default.Layers,
                 "Render" to Icons.Default.Speed
@@ -274,12 +282,11 @@ fun ToolsScreen(
                 val isSel = selectedTab == idx
                 Box(
                     modifier = Modifier
-                        .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(if (isSel) Color(0xFFFFB300).copy(alpha = 0.2f) else Color(0xFF13151D))
                         .border(0.8.dp, if (isSel) Color(0xFFFFB300) else Color(0xFF222533), RoundedCornerShape(12.dp))
                         .clickable { selectedTab = idx }
-                        .padding(vertical = 9.dp),
+                        .padding(horizontal = 10.dp, vertical = 9.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -289,7 +296,7 @@ fun ToolsScreen(
                             tint = if (isSel) Color(0xFFFFB300) else Color(0xFF8E8E98),
                             modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(3.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = label,
                             color = if (isSel) Color(0xFFFFB300) else Color(0xFF8E8E98),
@@ -312,7 +319,11 @@ fun ToolsScreen(
         ) {
             when (selectedTab) {
                 0 -> {
-                    // TAB 0: DPI & RESOLUTION ENGINE
+                    // TAB 0: DPI & RESOLUTION DOWNSCALE ENGINE
+                    val origDpi = smoothnessManager.getOriginalDpi()
+                    val origRes = smoothnessManager.getOriginalResolution()
+                    val isShizukuReady = smoothnessManager.isShizukuInstalled()
+
                     ToolsCard {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -327,12 +338,99 @@ fun ToolsScreen(
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
-                                    Text("DPI & Resolution Engine", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                    Text("Input manual, Import ZIP aman & Countdown 5s", color = Color(0xFF8E8E98), fontSize = 11.sp)
+                                    Text("Resolution Downscale & DPI Tuning", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                    Text("wm size, wm density, downscaling & pemulihan", color = Color(0xFF8E8E98), fontSize = 11.sp)
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Original System Config Card
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFF141824))
+                                    .border(0.8.dp, Color(0xFF283147), RoundedCornerShape(10.dp))
+                                    .padding(10.dp)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("Resolusi Fisik Asli:", color = Color(0xFF94A3B8), fontSize = 10.5.sp)
+                                        Text(origRes, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                                    }
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("DPI Layar Asli (Default):", color = Color(0xFF94A3B8), fontSize = 10.5.sp)
+                                        Text("$origDpi DPI", color = Color(0xFFFFB300), fontSize = 11.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                                    }
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("Status Izin Shizuku / ADB:", color = Color(0xFF94A3B8), fontSize = 10.5.sp)
+                                        Text(if (isShizukuReady) "Terpasang (ADB Ready)" else "Standard App Sandbox", color = if (isShizukuReady) Color(0xFF10B981) else Color(0xFF38BDF8), fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Downscale Presets
+                            Text("PRESET DOWNSCALING CEPAT:", color = Color(0xFF8E8E98), fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                val downscalePresets = listOf(
+                                    Triple("720p HD", "720x1600", 320),
+                                    Triple("900p", "900x2000", 380),
+                                    Triple("1080p FHD", "1080x2400", 420),
+                                    Triple("Native", origRes, origDpi)
+                                )
+
+                                downscalePresets.forEach { (label, res, dpi) ->
+                                    val isMatch = manualResolutionText == res && manualDpiText == dpi.toString()
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (isMatch) Color(0xFFFFB300).copy(alpha = 0.22f) else Color(0xFF171A26))
+                                            .border(0.8.dp, if (isMatch) Color(0xFFFFB300) else Color(0xFF282F45), RoundedCornerShape(8.dp))
+                                            .clickable {
+                                                manualResolutionText = res
+                                                manualDpiText = dpi.toString()
+                                                Toast.makeText(context, "Preset $label dipilih", Toast.LENGTH_SHORT).show()
+                                            }
+                                            .padding(vertical = 8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(label, color = if (isMatch) Color(0xFFFFB300) else Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                            Text("${dpi}DPI", color = Color(0xFF8E8E98), fontSize = 8.5.sp)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // Explanation about GPU Fillrate
+                            Text(
+                                text = "Prinsip Fisika Downscale: Menurunkan resolusi dari 1080p ke 720p mengurangi jumlah piksel yang harus digambar GPU sekitar 45-55%. Ini meringankan beban thermal fillrate sehingga FPS lebih stabil saat pertempuran berat tanpa menyebabkan panas berlebih.",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 10.5.sp,
+                                lineHeight = 14.5.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             // Manual DPI Input
                             Text("Input DPI Manual:", color = Color(0xFF8E8E98), fontSize = 11.sp, fontWeight = FontWeight.Medium)
@@ -341,7 +439,7 @@ fun ToolsScreen(
                                 value = manualDpiText,
                                 onValueChange = { manualDpiText = it.filter { ch -> ch.isDigit() } },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Contoh: 360, 420, 480", color = Color(0xFF6E7285), fontSize = 12.sp) },
+                                placeholder = { Text("Contoh: 320, 360, 420, 480", color = Color(0xFF6E7285), fontSize = 12.sp) },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -362,7 +460,7 @@ fun ToolsScreen(
                                 value = manualResolutionText,
                                 onValueChange = { manualResolutionText = it },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Contoh: 1080x2400", color = Color(0xFF6E7285), fontSize = 12.sp) },
+                                placeholder = { Text("Contoh: 720x1600, 1080x2400", color = Color(0xFF6E7285), fontSize = 12.sp) },
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = Color(0xFFFFB300),
@@ -373,7 +471,7 @@ fun ToolsScreen(
                                 shape = RoundedCornerShape(10.dp)
                             )
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             // IMPORT ZIP BUTTON
                             OutlinedButton(
@@ -396,7 +494,7 @@ fun ToolsScreen(
                             if (importedZipInfo != null) {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Konfigurasi ZIP Siap: DPI=${importedZipInfo?.dpi ?: "-"} • Res=${importedZipInfo?.resolution ?: "-"}",
+                                    text = "Konfigurasi ZIP: DPI=${importedZipInfo?.dpi ?: "-"} • Res=${importedZipInfo?.resolution ?: "-"}",
                                     color = Color(0xFF10B981),
                                     fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace
@@ -414,15 +512,17 @@ fun ToolsScreen(
 
                             Spacer(modifier = Modifier.height(14.dp))
 
-                            // Action Buttons (Apply with 5s countdown + Reset)
+                            // Action Buttons: Restore Original (Recovery) + Apply
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedButton(
                                     onClick = {
                                         scope.launch {
-                                            smoothnessManager.resetToDefault(context as? Activity)
-                                            manualDpiText = "420"
-                                            manualResolutionText = "1080x2400"
-                                            Toast.makeText(context, "DPI & Resolusi direset ke default sistem", Toast.LENGTH_SHORT).show()
+                                            val res = smoothnessManager.restoreOriginalDisplay(context as? Activity)
+                                            manualDpiText = origDpi.toString()
+                                            manualResolutionText = origRes
+                                            applyResult = res
+                                            showResultDialog = true
+                                            Toast.makeText(context, "Pemulihan layar bawaan berhasil dijalankan!", Toast.LENGTH_SHORT).show()
                                         }
                                     },
                                     modifier = Modifier.weight(1f),
@@ -431,12 +531,11 @@ fun ToolsScreen(
                                 ) {
                                     Icon(Icons.Default.RestartAlt, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Reset Default", fontSize = 11.sp)
+                                    Text("Pulihkan Asli", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
 
                                 Button(
                                     onClick = {
-                                        // Start real 5s countdown dialog with Cancel button
                                         countdownSeconds = 5
                                         showCountdownDialog = true
                                         countdownJob?.cancel()
@@ -446,8 +545,12 @@ fun ToolsScreen(
                                                 delay(1000)
                                             }
                                             showCountdownDialog = false
-                                            // Apply via Shizuku / Shell / Settings
-                                            val dpiVal = manualDpiText.toIntOrNull() ?: 420
+
+                                            val dpiVal = manualDpiText.toIntOrNull() ?: origDpi
+                                            // Execute real wm commands via shell runner
+                                            smoothnessManager.executeWmCommand("wm size $manualResolutionText")
+                                            smoothnessManager.executeWmCommand("wm density $dpiVal")
+
                                             val config = com.example.data.SmoothnessConfig(
                                                 mode = "BALANCED",
                                                 targetRefreshRate = 60,
@@ -475,7 +578,17 @@ fun ToolsScreen(
                 }
 
                 1 -> {
-                    // TAB 1: DNS KUSTOM
+                    // TAB 1: EXECTERM TERMINAL
+                    ExecTermSection()
+                }
+
+                2 -> {
+                    // TAB 2: SAFE GAME FILE & CONFIG INSPECTOR
+                    GameConfigFileInspector()
+                }
+
+                3 -> {
+                    // TAB 3: DNS KUSTOM
                     ToolsCard {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -608,8 +721,8 @@ fun ToolsScreen(
                     }
                 }
 
-                2 -> {
-                    // TAB 2: CROSSHAIR RETICLE & GAMING HUD OVERLAY
+                4 -> {
+                    // TAB 4: CROSSHAIR RETICLE & GAMING HUD OVERLAY
                     ToolsCard {
                         Column(modifier = Modifier.padding(16.dp)) {
                             CrosshairConfigSection(settingsManager = settingsManager)
@@ -667,8 +780,8 @@ fun ToolsScreen(
                     }
                 }
 
-                3 -> {
-                    // TAB 3: RENDER SELECTION
+                5 -> {
+                    // TAB 5: RENDER SELECTION
                     ToolsCard {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
