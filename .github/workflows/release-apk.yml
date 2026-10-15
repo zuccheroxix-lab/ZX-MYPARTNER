@@ -1,0 +1,147 @@
+name: Build & Publish Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag versi rilis (contoh: v2.2.0)'
+        required: true
+        default: 'v2.2.0'
+
+jobs:
+  build-and-release:
+    name: Build & Release Android APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 1. Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 2. Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 3. Setup Gradle with Smart Caching
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: 4. Grant Execute Permission to Gradlew
+        run: chmod +x gradlew
+
+      - name: 5. Prepare Keystore & Signing Environment
+        run: |
+          echo "=== [SETUP SIGNING KEYSTORE] ==="
+          # Jika repository memiliki secret KEYSTORE_BASE64, decode ke file
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "Menggunakan release keystore dari GitHub Secrets..."
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > my-upload-key.jks
+            echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/my-upload-key.jks" >> $GITHUB_ENV
+            echo "STORE_PASSWORD=${{ secrets.STORE_PASSWORD }}" >> $GITHUB_ENV
+            echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
+          elif [ ! -f "debug.keystore" ]; then
+            # Fallback aman: Otomatis generate keystore agar build release tidak pernah gagal
+            echo "Membuat fallback keystore lokal untuk build release otomatis..."
+            keytool -genkey -v \
+              -keystore debug.keystore \
+              -alias androiddebugkey \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass android \
+              -keypass android \
+              -dname "CN=Android Release Fallback,OU=DevOps,O=DYNIMETIZE,C=US"
+            echo "debug.keystore berhasil dibuat."
+          fi
+
+      - name: 6. Build Release & Debug APKs
+        run: |
+          echo "=== [COMPILING APKS] ==="
+          ./gradlew assembleRelease assembleDebug --stacktrace --no-daemon
+
+      - name: 7. Validate and Organize Release Artifacts
+        id: organize_artifacts
+        run: |
+          echo "=== [VERIFYING & PACKAGING ARTIFACTS] ==="
+          
+          # Tentukan nama versi dari tag git atau manual input
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION_TAG="${{ github.ref_name }}"
+          else
+            VERSION_TAG="${{ github.event.inputs.tag_name || 'v2.2.0' }}"
+          fi
+          echo "CURRENT_TAG=$VERSION_TAG" >> $GITHUB_ENV
+
+          RELEASE_SOURCE="app/build/outputs/apk/release/app-release.apk"
+          DEBUG_SOURCE="app/build/outputs/apk/debug/app-debug.apk"
+
+          if [ ! -f "$RELEASE_SOURCE" ]; then
+            echo "::error::File $RELEASE_SOURCE tidak ditemukan! Build gagal."
+            exit 1
+          fi
+
+          mkdir -p dist_release
+
+          # Beri nama terstandar dengan versi
+          NAMED_RELEASE="DYNIMETIZE_ZX-${VERSION_TAG}-release.apk"
+          NAMED_DEBUG="DYNIMETIZE_ZX-${VERSION_TAG}-debug.apk"
+
+          # Salin file terversi
+          cp -f "$RELEASE_SOURCE" "dist_release/$NAMED_RELEASE"
+          cp -f "$DEBUG_SOURCE" "dist_release/$NAMED_DEBUG"
+
+          # Salin juga dengan nama generik (untuk tautan direct link permanen / latest)
+          cp -f "$RELEASE_SOURCE" "dist_release/DYNIMETIZE_ZX-release.apk"
+          cp -f "$DEBUG_SOURCE" "dist_release/DYNIMETIZE_ZX-debug.apk"
+
+          # Hitung SHA-256 Checksum resmi
+          cd dist_release
+          sha256sum "$NAMED_RELEASE" "$NAMED_DEBUG" "DYNIMETIZE_ZX-release.apk" "DYNIMETIZE_ZX-debug.apk" > checksums.txt
+          cat checksums.txt
+          cd ..
+
+          echo "RELEASE_FILE=dist_release/$NAMED_RELEASE" >> $GITHUB_ENV
+          echo "DEBUG_FILE=dist_release/$NAMED_DEBUG" >> $GITHUB_ENV
+
+      - name: 8. Upload Build Artifacts to GitHub Actions Run
+        uses: actions/upload-artifact@v4
+        with:
+          name: DYNIMETIZE_ZX-APKs
+          path: dist_release/*
+          retention-days: 30
+
+      - name: 9. Publish Release and Attach APK Binaries
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.CURRENT_TAG }}
+          name: DYNIMETIZE ZX ${{ env.CURRENT_TAG }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 🚀 DYNIMETIZE ZX Official Release ${{ env.CURRENT_TAG }}
+
+            Paket APK resmi telah selesai dikompilasi secara otomatis melalui pipeline CI/CD GitHub Actions.
+
+            ### 📲 Unduhan Langsung (Direct Download Anti Error 404):
+            - 🔹 **[Unduh APK Release (${{ env.CURRENT_TAG }})](https://github.com/${{ github.repository }}/releases/download/${{ env.CURRENT_TAG }}/DYNIMETIZE_ZX-${{ env.CURRENT_TAG }}-release.apk)** *(Direkomendasikan untuk pengguna/gaming)*
+            - 🔹 **[Unduh APK Release (Tautan Tetap)](https://github.com/${{ github.repository }}/releases/download/${{ env.CURRENT_TAG }}/DYNIMETIZE_ZX-release.apk)**
+            - 🔸 **[Unduh APK Debug (${{ env.CURRENT_TAG }})](https://github.com/${{ github.repository }}/releases/download/${{ env.CURRENT_TAG }}/DYNIMETIZE_ZX-${{ env.CURRENT_TAG }}-debug.apk)** *(Untuk pengujian developer & logcat)*
+
+            ---
+            ### 🔐 Verifikasi Keaslian (SHA-256 Checksum):
+            Periksa integritas file APK Anda setelah selesai mengunduh menggunakan daftar checksum di berkas `checksums.txt`.
+          files: |
+            dist_release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
