@@ -1,3 +1,6 @@
+[QR] qrcode library notice: Cannot find module 'qrcode'
+Require stack:
+- /app/applet/server.js
 [DYNIMETIZE ZX SERVER] Running on http://0.0.0.0:3000
   - Release APK: DYNIMETIZE_ZX-v2.2.0-release.apk
   - Debug APK:   DYNIMETIZE_ZX-v2.2.0-debug.apk
