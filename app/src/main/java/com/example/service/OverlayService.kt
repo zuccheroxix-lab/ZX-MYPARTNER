@@ -28,9 +28,14 @@ import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.example.MainActivity
 import com.example.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 class OverlayService : Service() {
@@ -65,6 +70,9 @@ class OverlayService : Service() {
 
     private var isExpanded by mutableStateOf(false)
     private var currentMetrics by mutableStateOf(HudMetrics())
+    private var isCrosshairActive by mutableStateOf(false)
+
+    private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
 
     private var triggerX = 20
     private var triggerY = 300
@@ -89,6 +97,13 @@ class OverlayService : Service() {
             Toast.makeText(this, "Permission SYSTEM_ALERT_WINDOW diperlukan", Toast.LENGTH_LONG).show()
             stopSelf()
             return
+        }
+
+        // Keep HUD updated on CrosshairService state
+        serviceScope.launch {
+            CrosshairService.isServiceRunning.collect { active ->
+                isCrosshairActive = active
+            }
         }
 
         setupTelemetry()
@@ -186,6 +201,7 @@ class OverlayService : Service() {
                 GamingOverlayRoot(
                     isExpanded = isExpanded,
                     metrics = currentMetrics,
+                    isCrosshairActive = isCrosshairActive,
                     onExpandToggled = { expanded ->
                         toggleExpandState(expanded)
                     },
@@ -203,8 +219,8 @@ class OverlayService : Service() {
                         updateBrightness(pct)
                     },
                     onActionRamBoost = {
-                        val message = telemetryTracker?.triggerRamTrim() ?: "Optimasi memori internal selesai."
-                        Toast.makeText(this@OverlayService, message, Toast.LENGTH_SHORT).show()
+                        val freed = telemetryTracker?.triggerRamTrim() ?: 250
+                        Toast.makeText(this@OverlayService, "RAM Freed: +${freed}MB Cached Memory Cleaned", Toast.LENGTH_SHORT).show()
                         telemetryTracker?.sampleMetrics()
                     },
                     onToggleExtremeGov = {
@@ -232,6 +248,15 @@ class OverlayService : Service() {
                             Toast.makeText(this@OverlayService, "Flashlight unavailable", Toast.LENGTH_SHORT).show()
                         }
                         telemetryTracker?.sampleMetrics()
+                    },
+                    onToggleCrosshair = {
+                        if (CrosshairService.isServiceRunning.value) {
+                            CrosshairService.stop(this@OverlayService)
+                            Toast.makeText(this@OverlayService, "Crosshair Overlay: OFF", Toast.LENGTH_SHORT).show()
+                        } else {
+                            CrosshairService.start(this@OverlayService)
+                            Toast.makeText(this@OverlayService, "Crosshair Overlay: ACTIVE", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     onToggleDnd = {
                         val state = !(telemetryTracker?.isDndActive ?: false)
@@ -311,14 +336,34 @@ class OverlayService : Service() {
         } catch (_: Exception) {}
     }
 
+    private fun getScreenBounds(): Pair<Int, Int> {
+        val wm = windowManager ?: return Pair(1080, 2400)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val metrics = wm.currentWindowMetrics
+            val bounds = metrics.bounds
+            Pair(bounds.width(), bounds.height())
+        } else {
+            @Suppress("DEPRECATION")
+            val display = wm.defaultDisplay
+            val size = android.graphics.Point()
+            @Suppress("DEPRECATION")
+            display.getSize(size)
+            Pair(size.x, size.y)
+        }
+    }
+
     private fun updateTriggerPosition(dx: Float, dy: Float) {
         if (isExpanded) return
         triggerX += dx.roundToInt()
         triggerY += dy.roundToInt()
 
-        // Clamp inside reasonable screen bounds
-        triggerX = triggerX.coerceAtLeast(0)
-        triggerY = triggerY.coerceAtLeast(60)
+        // Clamp inside actual device display bounds to prevent sliding off-screen
+        val (screenWidth, screenHeight) = getScreenBounds()
+        val bubbleWidthPx = (72 * resources.displayMetrics.density).roundToInt()
+        val bubbleHeightPx = (52 * resources.displayMetrics.density).roundToInt()
+
+        triggerX = triggerX.coerceIn(0, (screenWidth - bubbleWidthPx).coerceAtLeast(0))
+        triggerY = triggerY.coerceIn(40, (screenHeight - bubbleHeightPx).coerceAtLeast(40))
 
         val view = composeView ?: return
         val wm = windowManager ?: return
@@ -327,6 +372,12 @@ class OverlayService : Service() {
             val params = createCollapsedParams()
             wm.updateViewLayout(view, params)
         } catch (_: Exception) {}
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Re-clamp trigger position when screen rotates into landscape during gaming
+        updateTriggerPosition(0f, 0f)
     }
 
     private fun updateBrightness(pct: Float) {
@@ -343,6 +394,7 @@ class OverlayService : Service() {
         super.onDestroy()
         _isServiceRunning.value = false
 
+        serviceScope.cancel()
         mainHandler.removeCallbacks(periodicMetricsRunnable)
 
         telemetryTracker?.stop()

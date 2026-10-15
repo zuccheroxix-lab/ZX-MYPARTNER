@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
+import android.provider.Settings
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -37,6 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.FlashlightOn
@@ -56,6 +58,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -91,6 +94,7 @@ private val TextMuted = Color(0xFF94A3B8)
 fun GamingOverlayRoot(
     isExpanded: Boolean,
     metrics: HudMetrics,
+    isCrosshairActive: Boolean,
     onExpandToggled: (Boolean) -> Unit,
     onCloseService: () -> Unit,
     onTriggerDrag: (Float, Float) -> Unit,
@@ -101,6 +105,7 @@ fun GamingOverlayRoot(
     onToggleTouch240: () -> Unit,
     onToggleFpsStabilizer: () -> Unit,
     onToggleTorch: () -> Unit,
+    onToggleCrosshair: () -> Unit,
     onToggleDnd: () -> Unit,
     onOpenGameLibrary: () -> Unit,
     onCheckShizuku: () -> Unit
@@ -130,6 +135,7 @@ fun GamingOverlayRoot(
             ) {
                 GamingHudPanel(
                     metrics = metrics,
+                    isCrosshairActive = isCrosshairActive,
                     onMinimize = { onExpandToggled(false) },
                     onCloseService = onCloseService,
                     onVolumeChanged = onVolumeChanged,
@@ -139,6 +145,7 @@ fun GamingOverlayRoot(
                     onToggleTouch240 = onToggleTouch240,
                     onToggleFpsStabilizer = onToggleFpsStabilizer,
                     onToggleTorch = onToggleTorch,
+                    onToggleCrosshair = onToggleCrosshair,
                     onToggleDnd = onToggleDnd,
                     onOpenGameLibrary = onOpenGameLibrary,
                     onCheckShizuku = onCheckShizuku
@@ -167,14 +174,28 @@ fun FloatingTriggerBubble(
     onClick: () -> Unit,
     onDrag: (Float, Float) -> Unit
 ) {
+    var totalDragDist by remember { mutableFloatStateOf(0f) }
+
     Box(
         modifier = Modifier
             .size(width = 66.dp, height = 48.dp)
             .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    onDrag(dragAmount.x, dragAmount.y)
-                }
+                detectDragGestures(
+                    onDragStart = {
+                        totalDragDist = 0f
+                    },
+                    onDragEnd = {
+                        if (totalDragDist < 12f) {
+                            onClick()
+                        }
+                    },
+                    onDragCancel = {},
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        totalDragDist += kotlin.math.abs(dragAmount.x) + kotlin.math.abs(dragAmount.y)
+                        onDrag(dragAmount.x, dragAmount.y)
+                    }
+                )
             }
             .clip(RoundedCornerShape(24.dp))
             .background(
@@ -220,12 +241,13 @@ fun FloatingTriggerBubble(
  * Expanded Gaming HUD Dashboard with:
  * Left: 4 feature buttons (BOOST, GOVERNOR, TOUCH, FPS STAB)
  * Center: RAM, FPS (Prominent), CPU
- * Right: 4 feature buttons (TORCH, GAME SPACE, DND, SHIZUKU)
+ * Right: 4 feature buttons (TORCH, CROSSHAIR, DND, SHIZUKU)
  * Bottom: Brightness & Volume sliders + Action buttons
  */
 @Composable
 fun GamingHudPanel(
     metrics: HudMetrics,
+    isCrosshairActive: Boolean,
     onMinimize: () -> Unit,
     onCloseService: () -> Unit,
     onVolumeChanged: (Float) -> Unit,
@@ -235,13 +257,28 @@ fun GamingHudPanel(
     onToggleTouch240: () -> Unit,
     onToggleFpsStabilizer: () -> Unit,
     onToggleTorch: () -> Unit,
+    onToggleCrosshair: () -> Unit,
     onToggleDnd: () -> Unit,
     onOpenGameLibrary: () -> Unit,
     onCheckShizuku: () -> Unit
 ) {
     val context = LocalContext.current
-    var brightnessValue by remember { mutableFloatStateOf(0.8f) }
-    var volumeValue by remember { mutableFloatStateOf(metrics.volumePercent / 100f) }
+
+    val initialBrightness = remember {
+        try {
+            val sysBrightness = Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, 180)
+            (sysBrightness / 255f).coerceIn(0.1f, 1.0f)
+        } catch (_: Exception) {
+            0.8f
+        }
+    }
+    var brightnessValue by remember { mutableFloatStateOf(initialBrightness) }
+    var volumeValue by remember { mutableFloatStateOf((metrics.volumePercent / 100f).coerceIn(0f, 1f)) }
+
+    // Bidirectional sync: keep volume slider updated if adjusted via hardware volume keys
+    LaunchedEffect(metrics.volumePercent) {
+        volumeValue = (metrics.volumePercent / 100f).coerceIn(0f, 1f)
+    }
 
     fun vibrate() {
         try {
@@ -379,7 +416,7 @@ fun GamingHudPanel(
                         HudFeatureTile(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.RocketLaunch,
-                            label = "MEM OPT",
+                            label = "RAM BOOST",
                             isActive = true,
                             onClick = {
                                 vibrate()
@@ -556,12 +593,12 @@ fun GamingHudPanel(
                         )
                         HudFeatureTile(
                             modifier = Modifier.weight(1f),
-                            icon = Icons.Default.SportsEsports,
-                            label = "GAMES",
-                            isActive = true,
+                            icon = Icons.Default.CenterFocusStrong,
+                            label = "CROSSHAIR",
+                            isActive = isCrosshairActive,
                             onClick = {
                                 vibrate()
-                                onOpenGameLibrary()
+                                onToggleCrosshair()
                             }
                         )
                     }
