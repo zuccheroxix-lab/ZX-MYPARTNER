@@ -21,8 +21,9 @@ echo "[1/4] Cleaning previous build cache and old APK artifacts..."
 rm -f releases/*.apk release/*.apk public/*.apk .aistudio/artifacts/brain/6e88e88f-842a-46b6-bb5f-6a9cf9d00d70/*.apk
 rm -rf app/build/outputs/apk/release/* app/build/outputs/apk/debug/*
 
-echo "[2/4] Building FRESH Release and Debug APKs via $GRADLE_CMD assembleDebug assembleRelease..."
-$GRADLE_CMD assembleDebug assembleRelease
+echo "[2/4] Building FRESH Release and Debug APKs via $GRADLE_CMD assembleDebug and assembleRelease sequentially..."
+$GRADLE_CMD assembleDebug
+$GRADLE_CMD assembleRelease
 
 DEBUG_APK="app/build/outputs/apk/debug/app-debug.apk"
 RELEASE_APK="app/build/outputs/apk/release/app-release.apk"
