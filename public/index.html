@@ -438,12 +438,89 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .btn-qr-action:hover {
       background: rgba(255, 179, 0, 0.15);
       border-color: var(--gold);
       color: var(--gold);
+    }
+
+    .btn-qr-action.btn-primary-action {
+      background: rgba(0, 230, 118, 0.15);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .btn-qr-action.btn-primary-action:hover {
+      background: rgba(0, 230, 118, 0.25);
+    }
+
+    .qr-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .qr-tab-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-dim);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .qr-tab-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .qr-tab-btn.active {
+      background: rgba(255, 179, 0, 0.18);
+      border-color: var(--gold);
+      color: var(--gold);
+      box-shadow: 0 0 10px rgba(255, 179, 0, 0.2);
+    }
+
+    .qr-explain {
+      font-size: 11px;
+      color: #CBD5E1;
+      line-height: 1.45;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 8px 10px;
+      border-radius: 6px;
+      border-left: 3px solid var(--gold);
+    }
+
+    .custom-url-box {
+      display: none;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .custom-url-input {
+      flex: 1;
+      background: #080A0F;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: monospace;
+    }
+
+    .custom-url-input:focus {
+      outline: none;
+      border-color: var(--gold);
     }
   </style>
 </head>
@@ -537,9 +614,23 @@
           </svg>
         </div>
         <div>
-          <div class="qr-title">SCAN TO DOWNLOAD (MOBILE ACCESS)</div>
-          <div class="qr-subtitle">Arahkan kamera ponsel Android untuk unduh instan APK Release</div>
+          <div class="qr-title">SCAN TO DOWNLOAD (AKSES MOBILE ANDROID)</div>
+          <div class="qr-subtitle">Arahkan kamera HP Android untuk download instan APK Release v2.2.0 tanpa repot</div>
         </div>
+      </div>
+
+      <!-- Link Source Switcher Tabs -->
+      <div class="qr-tabs">
+        <button class="qr-tab-btn active" id="tabGithub" onclick="setQrSource('github')">🌟 GitHub Direct (Publik)</button>
+        <button class="qr-tab-btn" id="tabCloud" onclick="setQrSource('cloud')">🚀 Cloud Shared Preview</button>
+        <button class="qr-tab-btn" id="tabHost" onclick="setQrSource('host')">💻 Host Browser</button>
+        <button class="qr-tab-btn" id="tabCustom" onclick="setQrSource('custom')">📱 Custom IP / WiFi</button>
+      </div>
+
+      <!-- Custom URL Input (for WiFi / local LAN) -->
+      <div class="custom-url-box" id="customUrlBox">
+        <input type="text" id="customUrlInput" class="custom-url-input" placeholder="Contoh: http://192.168.1.15:3000/DYNIMETIZE_ZX-v2.2.0-release.apk" />
+        <button class="btn-qr-action btn-primary-action" onclick="applyCustomUrl()">Terapkan QR</button>
       </div>
 
       <div class="qr-body">
@@ -548,12 +639,16 @@
           <div id="qrLoading" class="qr-loading">Membuat QR...</div>
         </div>
         <div class="qr-meta">
-          <div class="qr-badge" id="qrBadge">RELEASE APK DIRECT LINK</div>
+          <div class="qr-badge" id="qrBadge">GITHUB DIRECT APK LINK (BEBAS LOGIN)</div>
           <div class="qr-link-preview" id="qrLinkText">Memuat tautan rilis...</div>
+          <div class="qr-explain" id="qrExplain">
+            💡 <strong>Link Publik Langsung:</strong> Tautan resmi GitHub Releases langsung menuju file APK v2.2.0. Tidak memerlukan login, tidak terkena limit localhost, dan bisa di-scan/didownload oleh HP manapun.
+          </div>
           <div class="qr-action-row">
+            <button class="btn-qr-action btn-primary-action" onclick="copyQrLink()">📋 Salin Link</button>
+            <a class="btn-qr-action" id="openLinkBtn" href="#" target="_blank">🌐 Buka Link</a>
+            <button class="btn-qr-action" onclick="downloadQrImage()">🖼️ Simpan QR (.PNG)</button>
             <button class="btn-qr-action" onclick="refreshQr()">🔄 Refresh</button>
-            <button class="btn-qr-action" onclick="copyQrLink()">📋 Salin Link</button>
-            <button class="btn-qr-action" onclick="toggleQrTarget()" id="toggleTargetBtn">🎯 Mode: Release APK</button>
           </div>
         </div>
       </div>
@@ -567,9 +662,10 @@
         <span>💡</span> Verifikasi & Panduan Akses File:
       </div>
       <ol class="info-list">
-        <li><strong>APK Release</strong>: Siap instal untuk pengguna umum/gaming tanpa debug flags.</li>
+        <li><strong>APK Release</strong>: Siap instal untuk pengguna umum/gaming tanpa debug flags (Direkomendasikan).</li>
         <li><strong>APK Debug</strong>: Menyertakan logcat & debugging flags untuk inspeksi developer.</li>
-        <li>Akses langsung di File Explorer AI Studio: Folder <code>releases/</code> &gt; klik kanan <code>DYNIMETIZE_ZX-v2.2.0-release.apk</code> atau <code>DYNIMETIZE_ZX-v2.2.0-debug.apk</code> &gt; <em>Download</em>.</li>
+        <li><strong>Akses langsung File Explorer AI Studio</strong>: Folder <code>releases/</code> &gt; klik kanan <code>DYNIMETIZE_ZX-v2.2.0-release.apk</code> &gt; <em>Download</em>.</li>
+        <li><strong>Mengapa ada beberapa link?</strong> Link GitHub adalah rilis publik global tanpa batasan login. Link Host Browser adalah instance lokal.</li>
       </ol>
       <div class="checksum-box">
         <strong>SHA-256 Release:</strong> <span id="checksumRelease">8cf83e1a9fc60fb0239c2e56cc15a729c565bdec3306697b30e8ba1323fab27f</span><br>
@@ -579,9 +675,15 @@
   </div>
 
   <script>
+    const GITHUB_RELEASE_APK = 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/download/v2.2.0/DYNIMETIZE_ZX-v2.2.0-release.apk';
+    const GITHUB_DEBUG_APK = 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/download/v2.2.0/DYNIMETIZE_ZX-v2.2.0-debug.apk';
+    const SHARED_CLOUD_APK = 'https://ais-pre-53utl2wa2l3av52avsryha-775066291292.asia-east1.run.app/DYNIMETIZE_ZX-v2.2.0-release.apk';
     const RELEASE_URL = '/DYNIMETIZE_ZX-v2.2.0-release.apk';
     const DEBUG_URL = '/DYNIMETIZE_ZX-v2.2.0-debug.apk';
     const statusBox = document.getElementById('statusBox');
+
+    let currentSource = 'github'; // 'github' | 'cloud' | 'host' | 'custom'
+    let customUrlValue = '';
 
     async function loadStatus() {
       try {
@@ -605,48 +707,107 @@
     }
     loadStatus();
 
-    // QR Code Generator Logic for Direct Mobile Access
-    let currentQrTarget = 'release'; // 'release' | 'github' | 'debug'
-
-    function getTargetUrl(target) {
-      if (target === 'github') {
-        return 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/latest';
+    function getCurrentTargetUrl() {
+      if (currentSource === 'github') {
+        return GITHUB_RELEASE_APK;
+      } else if (currentSource === 'cloud') {
+        return SHARED_CLOUD_APK;
+      } else if (currentSource === 'custom') {
+        return customUrlValue || (window.location.origin + RELEASE_URL);
+      } else {
+        return window.location.origin + RELEASE_URL;
       }
-      const path = target === 'debug' ? DEBUG_URL : RELEASE_URL;
-      return window.location.origin + path;
     }
 
-    async function updateQrCode(target = currentQrTarget) {
-      currentQrTarget = target;
-      const url = getTargetUrl(target);
-      const qrLinkText = document.getElementById('qrLinkText');
-      const qrLoading = document.getElementById('qrLoading');
-      const qrContainer = document.getElementById('qrContainer');
-      const qrBadge = document.getElementById('qrBadge');
-      const toggleBtn = document.getElementById('toggleTargetBtn');
+    function setQrSource(source) {
+      currentSource = source;
 
-      if (qrLinkText) qrLinkText.innerText = url;
-      if (qrLoading) qrLoading.style.display = 'flex';
+      // Update tabs
+      ['tabGithub', 'tabCloud', 'tabHost', 'tabCustom'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
 
-      if (qrBadge) {
-        if (target === 'release') {
-          qrBadge.innerText = 'RELEASE APK DIRECT LINK';
-          qrBadge.style.color = 'var(--green)';
-          qrBadge.style.borderColor = 'var(--green)';
-        } else if (target === 'debug') {
-          qrBadge.innerText = 'DEBUG APK DIRECT LINK';
-          qrBadge.style.color = 'var(--cyan)';
-          qrBadge.style.borderColor = 'var(--cyan)';
-        } else {
-          qrBadge.innerText = 'GITHUB RELEASE LATEST';
-          qrBadge.style.color = 'var(--gold)';
-          qrBadge.style.borderColor = 'var(--gold)';
+      const customBox = document.getElementById('customUrlBox');
+      const explain = document.getElementById('qrExplain');
+      const badge = document.getElementById('qrBadge');
+
+      if (source === 'github') {
+        document.getElementById('tabGithub').classList.add('active');
+        if (customBox) customBox.style.display = 'none';
+        if (badge) {
+          badge.innerText = 'GITHUB DIRECT APK LINK (BEBAS LOGIN)';
+          badge.style.color = 'var(--green)';
+          badge.style.borderColor = 'var(--green)';
+        }
+        if (explain) {
+          explain.innerHTML = '💡 <strong>Link Publik Langsung:</strong> Tautan resmi GitHub Releases langsung menuju file APK v2.2.0. Tidak memerlukan login, tidak terkena limit localhost, dan bisa di-scan/didownload oleh HP manapun.';
+        }
+      } else if (source === 'cloud') {
+        document.getElementById('tabCloud').classList.add('active');
+        if (customBox) customBox.style.display = 'none';
+        if (badge) {
+          badge.innerText = 'CLOUD SHARED PREVIEW (FAST CDN)';
+          badge.style.color = 'var(--cyan)';
+          badge.style.borderColor = 'var(--cyan)';
+        }
+        if (explain) {
+          explain.innerHTML = '🚀 <strong>Cloud Shared URL:</strong> Tautan server cloud AI Studio yang di-hosting online. Bisa diakses via internet tanpa perlu server lokal aktif.';
+        }
+      } else if (source === 'host') {
+        document.getElementById('tabHost').classList.add('active');
+        if (customBox) customBox.style.display = 'none';
+        if (badge) {
+          badge.innerText = 'HOST BROWSER AKTIF (LOCAL / EMBED)';
+          badge.style.color = 'var(--gold)';
+          badge.style.borderColor = 'var(--gold)';
+        }
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (explain) {
+          explain.innerHTML = isLocal
+            ? '⚠️ <strong>Catatan Host Lokal:</strong> Link ini mengarah ke <code>localhost:3000</code>. Kamera HP tidak bisa membuka localhost ini secara langsung kecuali HP dan PC tersambung via WiFi (gunakan tab "Custom IP / WiFi" atau "GitHub Direct").'
+            : '💻 <strong>Host Browser:</strong> Tautan langsung berdasarkan domain web browser yang sedang Anda buka saat ini.';
+        }
+      } else if (source === 'custom') {
+        document.getElementById('tabCustom').classList.add('active');
+        if (customBox) {
+          customBox.style.display = 'flex';
+          const input = document.getElementById('customUrlInput');
+          if (!input.value) {
+            input.value = window.location.origin + RELEASE_URL;
+          }
+        }
+        if (badge) {
+          badge.innerText = 'CUSTOM / LAN WIFI DOWNLOAD LINK';
+          badge.style.color = '#FFA726';
+          badge.style.borderColor = '#FFA726';
+        }
+        if (explain) {
+          explain.innerHTML = '📱 <strong>Transfer WiFi Lokal:</strong> Masukkan alamat IP komputer/laptop Anda (misal <code>http://192.168.1.50:3000/DYNIMETIZE_ZX-v2.2.0-release.apk</code>) agar HP di jaringan WiFi yang sama bisa mendownload secepat kilat!';
         }
       }
 
-      if (toggleBtn) {
-        toggleBtn.innerText = target === 'release' ? '🎯 Mode: Release APK' : (target === 'debug' ? '🎯 Mode: Debug APK' : '🎯 Mode: GitHub');
+      updateQrDisplay();
+    }
+
+    function applyCustomUrl() {
+      const input = document.getElementById('customUrlInput');
+      if (input && input.value.trim().length > 0) {
+        customUrlValue = input.value.trim();
+        updateQrDisplay();
       }
+    }
+
+    async function updateQrDisplay() {
+      const url = getCurrentTargetUrl();
+      const qrLinkText = document.getElementById('qrLinkText');
+      const qrLoading = document.getElementById('qrLoading');
+      const qrContainer = document.getElementById('qrContainer');
+      const openBtn = document.getElementById('openLinkBtn');
+
+      if (qrLinkText) qrLinkText.innerText = url;
+      if (openBtn) openBtn.href = url;
+      if (qrLoading) qrLoading.style.display = 'flex';
 
       try {
         const res = await fetch(`/api/qrcode?format=svg&text=${encodeURIComponent(url)}`);
@@ -659,10 +820,10 @@
           return;
         }
       } catch (e) {
-        console.warn('[QR] SVG fetch error, using fallback:', e);
+        console.warn('[QR] SVG fetch error:', e);
       }
 
-      // Fallback Image
+      // Fallback PNG
       if (qrContainer) {
         qrContainer.innerHTML = `<img src="/api/qrcode?format=png&text=${encodeURIComponent(url)}" alt="QR Code" style="width:100%;height:100%;object-fit:contain;" />`;
       }
@@ -670,41 +831,51 @@
     }
 
     function refreshQr() {
-      updateQrCode(currentQrTarget);
-    }
-
-    function toggleQrTarget() {
-      if (currentQrTarget === 'release') {
-        updateQrCode('github');
-      } else if (currentQrTarget === 'github') {
-        updateQrCode('debug');
-      } else {
-        updateQrCode('release');
-      }
+      updateQrDisplay();
     }
 
     function copyQrLink() {
-      const url = getTargetUrl(currentQrTarget);
+      const url = getCurrentTargetUrl();
       navigator.clipboard.writeText(url).then(() => {
         statusBox.style.display = 'block';
-        statusBox.innerHTML = `📋 <strong>Link QR Code berhasil disalin:</strong><br><span style="font-size:12px;color:#bbb;">${url}</span>`;
+        statusBox.innerHTML = `📋 <strong>Link Berhasil Disalin:</strong><br><span style="font-size:12px;color:#A7F3D0;word-break:break-all;">${url}</span><br><span style="font-size:11px;color:#94A3B8;">Siap dibagikan ke browser atau teman via WhatsApp/Telegram</span>`;
       }).catch(() => {
         prompt('Salin link download:', url);
       });
     }
 
-    // Initialize QR Code for Release APK on page ready
-    updateQrCode('release');
+    function downloadQrImage() {
+      const url = getCurrentTargetUrl();
+      const pngUrl = `/api/qrcode?format=png&text=${encodeURIComponent(url)}`;
+      const a = document.createElement('a');
+      a.href = pngUrl;
+      a.download = `QR_DYNIMETIZE_ZX_${currentSource}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
 
     function copyLink(type) {
-      const url = window.location.origin + (type === 'debug' ? DEBUG_URL : RELEASE_URL);
-      navigator.clipboard.writeText(url).then(() => {
+      // By default use clean public direct URL if running on localhost or as requested
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const publicUrl = type === 'debug' ? GITHUB_DEBUG_APK : GITHUB_RELEASE_APK;
+      const hostUrl = window.location.origin + (type === 'debug' ? DEBUG_URL : RELEASE_URL);
+      const chosenUrl = isLocal ? publicUrl : hostUrl;
+
+      navigator.clipboard.writeText(chosenUrl).then(() => {
         statusBox.style.display = 'block';
-        statusBox.innerHTML = `📋 <strong>Link ${type.toUpperCase()} berhasil disalin:</strong><br><span style="font-size:12px;color:#bbb;">${url}</span>`;
+        statusBox.innerHTML = `
+          📋 <strong>Link APK ${type.toUpperCase()} Disalin:</strong><br>
+          <span style="font-size:12px;color:#A7F3D0;word-break:break-all;">${chosenUrl}</span><br>
+          <span style="font-size:11px;color:#94A3B8;">${isLocal ? '✨ Disalin menggunakan tautan publik resmi GitHub yang bisa diakses langsung di semua perangkat/HP.' : '✨ Tautan web aktif saat ini.'}</span>
+        `;
       }).catch(() => {
-        prompt(`Salin link download ${type}:`, url);
+        prompt(`Salin link download ${type}:`, chosenUrl);
       });
     }
+
+    // Initialize QR Code with GitHub Direct Release APK as default
+    setQrSource('github');
 
     async function startDownload(type) {
       const targetUrl = type === 'debug' ? DEBUG_URL : RELEASE_URL;

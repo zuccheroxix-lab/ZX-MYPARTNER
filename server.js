@@ -14,6 +14,13 @@ const PORT = 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const RELEASES_DIR = path.join(__dirname, 'releases');
 
+const SHARED_APP_URL = 'https://ais-pre-53utl2wa2l3av52avsryha-775066291292.asia-east1.run.app';
+const DEV_APP_URL = 'https://ais-dev-53utl2wa2l3av52avsryha-775066291292.asia-east1.run.app';
+const GITHUB_REPO = 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER';
+const GITHUB_RELEASE_URL = 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/latest';
+const GITHUB_DIRECT_RELEASE_APK = 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/download/v2.2.0/DYNIMETIZE_ZX-v2.2.0-release.apk';
+const GITHUB_DIRECT_DEBUG_APK = 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/download/v2.2.0/DYNIMETIZE_ZX-v2.2.0-debug.apk';
+
 function getFullUrl(req, subpath) {
   const forwardedProto = req.headers['x-forwarded-proto'];
   const proto = forwardedProto ? forwardedProto.split(',')[0].trim() : (req.connection && req.connection.encrypted ? 'https' : 'http');
@@ -196,11 +203,16 @@ const server = http.createServer((req, res) => {
         versionCode: 220,
         developer: 'ZUCCHERO XANN',
         developerId: 'ZX-DEV-001',
-        githubRepo: 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER',
-        githubReleaseUrl: 'https://github.com/zuccheroxix-lab/ZX-MYPARTNER/releases/latest',
+        githubRepo: GITHUB_REPO,
+        githubReleaseUrl: GITHUB_RELEASE_URL,
+        githubDirectReleaseApk: GITHUB_DIRECT_RELEASE_APK,
+        githubDirectDebugApk: GITHUB_DIRECT_DEBUG_APK,
+        sharedCloudReleaseUrl: `${SHARED_APP_URL}/${RELEASE_APK_FILENAME}`,
+        sharedCloudDebugUrl: `${SHARED_APP_URL}/${DEBUG_APK_FILENAME}`,
         releaseFullUrl: releaseFullUrl,
         debugFullUrl: debugFullUrl,
-        qrCodeSvgUrl: `/api/qrcode?format=svg&text=${encodeURIComponent(releaseFullUrl)}`,
+        recommendedMobileUrl: GITHUB_DIRECT_RELEASE_APK,
+        qrCodeSvgUrl: `/api/qrcode?format=svg&text=${encodeURIComponent(GITHUB_DIRECT_RELEASE_APK)}`,
         releaseApk: {
           filename: RELEASE_APK_FILENAME,
           exists: releaseExists,
@@ -228,7 +240,7 @@ const server = http.createServer((req, res) => {
   if (pathname === '/api/qrcode' || pathname === '/api/qr' || pathname === '/qr') {
     const rawText = parsedUrl.query.text;
     const format = (parsedUrl.query.format || 'svg').toLowerCase();
-    const defaultUrl = getFullUrl(req, `/${RELEASE_APK_FILENAME}`);
+    const defaultUrl = GITHUB_DIRECT_RELEASE_APK;
     const targetUrl = (rawText && typeof rawText === 'string' && rawText.trim().length > 0)
       ? rawText.trim()
       : defaultUrl;
